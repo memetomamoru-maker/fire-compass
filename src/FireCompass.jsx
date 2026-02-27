@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef, useEffect } from "react";
+import React, { useState, useCallback, useRef, useEffect } from "react";
 import {
   AreaChart, Area, LineChart, Line, ComposedChart,
   XAxis, YAxis, CartesianGrid, Tooltip, Legend,
@@ -377,10 +377,10 @@ function Lbl({children,tip}){
 
 // Number input — parseFloat safeguard: empty→keep old value
 const Num = ({value,onChange,unit,min=0,max=99999,step=1}) => {
-  const [local,setLocal]=React.useState(String(value));
+  const [local,setLocal]=useState(String(value));
   // 外から値が変わったときだけ同期（フォーカス中は上書きしない）
-  const focused=React.useRef(false);
-  React.useEffect(()=>{ if(!focused.current) setLocal(String(value)); },[value]);
+  const focused=useRef(false);
+  useEffect(()=>{ if(!focused.current) setLocal(String(value)); },[value]);
   const commit=(v)=>{
     const n=parseFloat(v);
     if(!isNaN(n)){
