@@ -1769,10 +1769,10 @@ export default function FireCompass(){
 
         {/* Nav */}
         <div style={{display:"flex",gap:10,marginTop:4}}>
-          {itab>0&&<button onClick={()=>setItab(t=>t-1)}
+          {itab>0&&<button onClick={()=>{document.activeElement?.blur();setTimeout(()=>setItab(t=>t-1),50);}}
             style={{padding:"10px 20px",borderRadius:10,border:`1.5px solid ${C.bdr}`,background:"#fff",color:C.t2,fontSize:13,cursor:"pointer"}}>← 前へ</button>}
           {itab<ITABS.length-1
-            ?<button onClick={()=>setItab(t=>t+1)}
+            ?<button onClick={()=>{document.activeElement?.blur();setTimeout(()=>setItab(t=>t+1),50);}}
                 style={{marginLeft:"auto",padding:"11px 26px",borderRadius:10,border:"none",
                   background:`linear-gradient(135deg,${C.g700},${C.g600})`,color:"#fff",fontSize:14,
                   fontWeight:700,cursor:"pointer",boxShadow:`0 2px 8px rgba(14,107,46,0.15)`}}>次へ →</button>
