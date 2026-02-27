@@ -1255,7 +1255,9 @@ export default function FireCompass(){
                   <rect x="10"    y="-2" width="4.5" height="20" rx="1.5" fill="#dc2626"/>
                   <rect x="-16.5" y="16" width="8"   height="3"  rx="1"   fill="#b91c1c"/>
                   <rect x="8.5"   y="16" width="8"   height="3"  rx="1"   fill="#b91c1c"/>
-                  <text x="0" y="23" textAnchor="middle" fill="#dc2626" fontSize="8.5" fontWeight="bold"
+                  {/* TOKYO テキスト: 白背景帯の上に赤文字で読みやすく */}
+                  <rect x="-17" y="15.5" width="34" height="11" rx="2" fill="rgba(255,255,255,0.88)"/>
+                  <text x="0" y="23.5" textAnchor="middle" fill="#b91c1c" fontSize="8" fontWeight="bold"
                     fontFamily="Georgia,serif" letterSpacing="2">TOKYO</text>
                 </g>
 
