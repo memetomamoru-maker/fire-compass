@@ -1794,6 +1794,9 @@ export default function FireCompass(){
           投資には元本割れリスクがあります。資産運用・年金・税務・相続に関する重要な意思決定は、ファイナンシャルプランナー（FP）・税理士・社会保険労務士等の専門家にご相談ください。
           年金試算は2025年時点の制度に基づく簡易計算であり、実際の受給額は日本年金機構の「ねんきん定期便」等でご確認ください。
         </div>
+        <div style={{textAlign:"center",padding:"16px 0 4px",fontSize:10,color:C.t3}}>
+          © 2026 memetomamoru
+        </div>
       </div>
     </div>
   );
@@ -2396,6 +2399,9 @@ export default function FireCompass(){
           投資には元本割れのリスクがあります。資産運用・税務・年金・相続に関する意思決定は、ファイナンシャルプランナー（CFP/AFP）・税理士・社会保険労務士等の専門家にご相談ください。
           年金試算は2025年度の制度・保険料率に基づく簡易計算です。実際の年金見込み額は「ねんきんネット」または「ねんきん定期便」でご確認ください。
           本ツールはすべての計算を端末内で完結しており、入力データを外部に送信しません。
+        </div>
+        <div style={{textAlign:"center",padding:"16px 0 4px",fontSize:10,color:C.t3}}>
+          © 2026 memetomamoru
         </div>
 
       </div>
