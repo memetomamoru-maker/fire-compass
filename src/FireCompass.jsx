@@ -452,7 +452,7 @@ const Tip=({active,payload,label})=>{
 /* ═══════════════════════════════════════════════════
    FUND ALLOCATION EDITOR
 ═══════════════════════════════════════════════════ */
-function FundAllocEditor({allocs,onChange,customFunds,onCustomFundsChange}){
+function FundAllocEditor({allocs,onChange,customFunds,onCustomFundsChange,isMobile}){
   const allF=getAllFunds(customFunds);
   const total=allocs.reduce((s,a)=>s+a.pct,0);
   const blend=calcBlendedRate(allocs,customFunds);
@@ -627,7 +627,7 @@ function FundAllocEditor({allocs,onChange,customFunds,onCustomFundsChange}){
 /* ═══════════════════════════════════════════════════
    SHARE CARD
 ═══════════════════════════════════════════════════ */
-function ShareCard({form,results,blended}){
+function ShareCard({form,results,blended,isMobile}){
   const ref=useRef(null);
   const [saving,setSaving]=useState(false);
   const fireDone=results.fireDiag.filter(f=>f.achieved);
@@ -1345,7 +1345,7 @@ export default function FireCompass(){
           {/* ── TAB 2: ファンド ── */}
           {itab===2&&<>
             <SectionHead icon={<span style={{fontSize:20}}>📈</span>} title="投資ファンド設定" sub="複数のファンドを組み合わせてポートフォリオを構築できます"/>
-            <FundAllocEditor allocs={form.allocs} onChange={v=>setF("allocs",v)} customFunds={form.customFunds} onCustomFundsChange={v=>setF("customFunds",v)}/>
+            <FundAllocEditor allocs={form.allocs} onChange={v=>setF("allocs",v)} customFunds={form.customFunds} onCustomFundsChange={v=>setF("customFunds",v)} isMobile={isMobile}/>
             <div style={{marginTop:14,background:C.infoL,borderRadius:11,padding:13,border:`1px solid ${C.info}33`}}>
               <div style={{fontSize:12,fontWeight:700,color:C.info,marginBottom:6}}>📌 リスク（標準偏差）とは？</div>
               <div style={{fontSize:11,color:C.t2,lineHeight:1.85}}>
@@ -2356,7 +2356,7 @@ export default function FireCompass(){
           <Card style={{marginBottom:14}}>
             <div style={{fontSize:15,fontWeight:800,color:C.t1,marginBottom:4}}>📱 SNSシェア</div>
             <div style={{fontSize:11,color:C.t3,marginBottom:14}}>X（Twitter）・Instagramなどでシェアできる画像カードです。</div>
-            <ShareCard form={form} results={{...results,fireDiag}} blended={blend}/>
+            <ShareCard form={form} results={{...results,fireDiag}} blended={blend} isMobile={isMobile}/>
           </Card>
           <Card>
             <div style={{fontSize:15,fontWeight:800,color:C.t1,marginBottom:8}}>📄 PDF・印刷保存</div>
