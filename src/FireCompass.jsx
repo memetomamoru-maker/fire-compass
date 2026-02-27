@@ -798,6 +798,7 @@ export default function FireCompass(){
   const [page,setPage]=useState("input");
   const [itab,setItab]=useState(0);
   const [rtab,setRtab]=useState("overview");
+  const [showPrintModal,setShowPrintModal]=useState(false);
   const [results,setResults]=useState(null);
   const [grossMode,setGrossMode]=useState(false);
   const [grossIncome,setGrossIncome]=useState(800);
@@ -2061,12 +2062,8 @@ export default function FireCompass(){
           </div>
         </div>
         <div style={{display:"flex",gap:7}}>
-          <button onClick={()=>{
-            const el=document.getElementById("report-root");
-            if(el) el.style.overflow="visible";
-            try{ window.print(); }
-            catch(e){ alert("キーボードショートカット Ctrl+P（Mac: ⌘+P）で印刷ダイアログを開いてください。"); }
-          }} style={{padding:"5px 11px",borderRadius:8,border:"1px solid rgba(255,255,255,0.2)",
+          <button onClick={()=>setShowPrintModal(true)}
+            style={{padding:"5px 11px",borderRadius:8,border:"1px solid rgba(255,255,255,0.2)",
             background:"rgba(255,255,255,0.07)",color:"#bbf7d0",fontSize:11,fontWeight:600,cursor:"pointer"}}>📄 印刷/PDF</button>
           <button onClick={()=>{setPage("input");}} style={{padding:"6px 14px",borderRadius:8,border:"none",
             background:C.g500,color:"#fff",fontSize:11,fontWeight:700,cursor:"pointer",
