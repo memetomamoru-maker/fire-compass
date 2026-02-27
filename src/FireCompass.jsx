@@ -133,47 +133,58 @@ function calcBlendedRate(allocs, cf){
 }
 
 // 年金計算（付加年金・任意加入・確定拠出年金対応）
+function pensAdjRate(startAge){
+  // 65歳基準。繰り上げ(60-64): -0.4%/月、繰り下げ(66-75): +0.7%/月
+  const months = (startAge - 65) * 12;
+  if(months === 0) return 1;
+  if(months < 0) return Math.max(0, 1 + months * 0.004); // 繰り上げ: 最大-24%
+  return 1 + months * 0.007; // 繰り下げ: 最大+84%（75歳=120ヶ月）
+}
 function calcPens(f){
   const kosei_m = f.pensionType==="kosei" ? Math.min(480,f.kosei_years*12) : 0;
-  // 任意加入: 退職後〜65歳まで国民年金に任意加入できる（サラリーマン早期退職者も同様）
+  // 任意加入: 退職後〜65歳まで国民年金に任意加入できる（国民年金法附則第5条）
   const maxExtraYrs = Math.max(0, 65 - (f.retireAge||55));
   const extra_m = Math.min(maxExtraYrs*12, (f.kokumin_extra||0)*12);
   const base_m  = Math.min(480, kosei_m + extra_m);
   const base_m2 = f.pensionType==="kokumin"
     ? Math.min(480,(f.pensionStartAge-20)*12)
     : base_m;
-  const kokumin = Math.round(795000 * Math.min(480, base_m2) / 480);
+  // 65歳受給基準額を計算してから増減率を適用
+  const adj = pensAdjRate(f.pensionStartAge||65);
+  const kokumin = Math.round(795000 * Math.min(480, base_m2) / 480 * adj);
   // 付加年金: 保険料月200円追加→受給は月400円増（年額 400円×加入月数）
-  // 国民年金加入者・早期退職後に任意加入してfuka_nenkinを有効にした場合
+  // 繰り下げ受給でも付加年金は増減率の対象（老齢基礎年金と同率で増減）
   const fukaM = f.pensionType==="kokumin"
     ? Math.min(480,(f.pensionStartAge-20)*12)
     : extra_m; // 退職後の任意加入期間のみ
   const fuka = (f.pensionType==="kokumin"||f.fuka_nenkin) && fukaM>0
-    ? fukaM * 400 : 0; // 年額 = 400円/月 × 加入月数（受給側は倍の400円）
+    ? Math.round(fukaM * 400 * adj) : 0;
   const avgM = toY(f.kosei_lastSalary||f.annualIncome)/12;
-  const kosei = f.pensionType==="kosei" ? Math.round(avgM*0.005481*f.kosei_years*12) : 0;
+  // 厚生年金も同じ増減率を適用（老齢厚生年金も同率）
+  const kosei = f.pensionType==="kosei" ? Math.round(avgM*0.005481*f.kosei_years*12 * adj) : 0;
   // iDeCo/確定拠出年金（複利で積立）
   const ideco_annual = (f.ideco_active&&f.ideco_monthly) ? f.ideco_monthly*12*MAN : 0;
   const ideco_yrs    = Math.max(0, (f.retireAge||55)-(f.currentAge||35));
   const r = (f.ideco_rate||4)/100;
   const ideco_asset  = r>0 ? ideco_annual*((1+r)**ideco_yrs-1)/r : ideco_annual*ideco_yrs;
-  return { base:kokumin, fuka, kosei, total:kokumin+fuka+kosei, ideco_asset:Math.round(ideco_asset/MAN) };
+  return { base:kokumin, fuka, kosei, total:kokumin+fuka+kosei, ideco_asset:Math.round(ideco_asset/MAN), adj };
 }
 function calcPartnerPens(f){
   if(!f.hasPartner) return {total:0};
   // 専業主婦・主夫: 第3号被保険者 → 国民年金のみ
   // 婚姻期間を配偶者の年齢から65歳まで（簡易計算）
   const pensStartAge = f.pensionStartAge||65; // パートナーも同じ受給開始年齢で概算
+  const adj = pensAdjRate(pensStartAge);
   if(f.p_isHousewife){
     const m = Math.min(480,(pensStartAge-20)*12);
-    const base = Math.round(795000*m/480);
+    const base = Math.round(795000*m/480 * adj);
     return {base, kosei:0, total:base};
   }
   // 共働き: パートナーの年金種別で計算
   const m = Math.min(480,(pensStartAge-20)*12);
-  const b = Math.round(795000*m/480);
+  const b = Math.round(795000*m/480 * adj);
   const avgM = toY(f.p_salary||f.p_income)/12;
-  const k = f.p_pensionType==="kosei" ? Math.round(avgM*0.005481*(f.p_kosei_years||20)*12) : 0;
+  const k = f.p_pensionType==="kosei" ? Math.round(avgM*0.005481*(f.p_kosei_years||20)*12 * adj) : 0;
   return {base:b, kosei:k, total:b+k};
 }
 
@@ -365,16 +376,35 @@ function Lbl({children,tip}){
 }
 
 // Number input — parseFloat safeguard: empty→keep old value
-const Num = ({value,onChange,unit,min=0,max=99999,step=1}) => (
-  <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:2}}>
-    <input type="number" value={value} min={min} max={max} step={step}
-      onChange={e=>{const v=e.target.value; if(v==="")return; const n=parseFloat(v); if(!isNaN(n))onChange(n);}}
-      style={{flex:1,padding:"9px 12px",borderRadius:9,border:`1.5px solid ${C.bdr}`,
-        background:"#fff",color:C.t1,fontSize:15,fontWeight:700,textAlign:"right",
-        outline:"none",fontFamily:FONT,minWidth:0}}/>
-    {unit&&<span style={{fontSize:12,color:C.t3,whiteSpace:"nowrap",flexShrink:0}}>{unit}</span>}
-  </div>
-);
+const Num = ({value,onChange,unit,min=0,max=99999,step=1}) => {
+  const [local,setLocal]=React.useState(String(value));
+  // 外から値が変わったときだけ同期（フォーカス中は上書きしない）
+  const focused=React.useRef(false);
+  React.useEffect(()=>{ if(!focused.current) setLocal(String(value)); },[value]);
+  const commit=(v)=>{
+    const n=parseFloat(v);
+    if(!isNaN(n)){
+      const clamped=Math.min(max,Math.max(min,n));
+      onChange(clamped);
+      setLocal(String(clamped));
+    } else {
+      setLocal(String(value)); // 不正値はリセット
+    }
+  };
+  return (
+    <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:2}}>
+      <input type="text" inputMode="decimal" value={local}
+        onFocus={()=>{focused.current=true;}}
+        onChange={e=>setLocal(e.target.value)}
+        onBlur={e=>{focused.current=false;commit(e.target.value);}}
+        onKeyDown={e=>{if(e.key==="Enter")commit(e.target.value);}}
+        style={{flex:1,padding:"9px 12px",borderRadius:9,border:`1.5px solid ${C.bdr}`,
+          background:"#fff",color:C.t1,fontSize:15,fontWeight:700,textAlign:"right",
+          outline:"none",fontFamily:FONT,minWidth:0}}/>
+      {unit&&<span style={{fontSize:12,color:C.t3,whiteSpace:"nowrap",flexShrink:0}}>{unit}</span>}
+    </div>
+  );
+};
 
 // Progress bar
 const Prog = ({val,color,h=8}) => (
@@ -500,7 +530,7 @@ function FundAllocEditor({allocs,onChange,customFunds,onCustomFundsChange}){
         ))}
       </div>
 
-      {selCat!=="カスタム"&&<div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:12}}>
+      {selCat!=="カスタム"&&<div style={{display:"grid",gridTemplateColumns:isMobile?"1fr":"1fr 1fr",gap:8,marginBottom:12}}>
         {allF.filter(f=>f.cat===selCat&&!allocs.find(a=>a.id===f.id)).map(f=>(
           <button key={f.id} onClick={()=>add(f.id)}
             style={{padding:"10px 12px",borderRadius:10,border:`1.5px solid ${C.bdr}`,
@@ -549,7 +579,7 @@ function FundAllocEditor({allocs,onChange,customFunds,onCustomFundsChange}){
               style={{width:"100%",padding:"8px 10px",borderRadius:8,border:`1.5px solid ${C.bdr}`,
                 background:"#fff",color:C.t1,fontSize:14,outline:"none",boxSizing:"border-box",fontFamily:FONT}}/>
           </div>
-          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:10}}>
+          <div style={{display:"grid",gridTemplateColumns:isMobile?"1fr":"1fr 1fr",gap:10,marginBottom:10}}>
             <div><Lbl>期待リターン（%）</Lbl>
               <input type="number" value={cf.rate} min={-5} max={30} step={0.5} onChange={e=>setCF(f=>({...f,rate:e.target.value}))}
                 style={{width:"100%",padding:"8px 10px",borderRadius:8,border:`1.5px solid ${C.bdr}`,background:"#fff",color:C.t1,fontSize:14,outline:"none",textAlign:"right",fontFamily:FONT}}/>
@@ -659,7 +689,7 @@ function ShareCard({form,results,blended}){
             <div style={{fontSize:11,color:"#94a3b8",marginTop:4}}>{blended.rate}% 期待リターン想定 ／ モンテカルロ{TRIALS}回</div>
           </div>
           {/* KPIグリッド */}
-          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:16}}>
+          <div style={{display:"grid",gridTemplateColumns:isMobile?"1fr":"1fr 1fr",gap:10,marginBottom:16}}>
             {[{label:"金融資産",val:fmtM(form.currentAsset),icon:"💳",accent:"#4ade80"},
               {label:"退職時資産（中央値）",val:fmt(results.retireA),icon:"🎯",accent:"#60a5fa"},
               {label:"老後資産生存率",val:postSurv+"%",icon:"📊",accent:postSurv>=80?"#4ade80":postSurv>=50?"#fbbf24":"#f87171"},
@@ -883,7 +913,7 @@ export default function FireCompass(){
 
   /* ══════════ INPUT PAGE ══════════ */
   if(page==="input") return(
-    <div style={{fontFamily:FONT,background:C.bg,minHeight:"100vh",padding:"0 0 80px"}}>
+    <div style={{fontFamily:FONT,background:C.bg,minHeight:"100vh",padding:"0 0 80px",overflowX:"hidden",width:"100%"}}>
       <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;600;700;900&family=Shippori+Mincho:wght@500;700&display=swap" rel="stylesheet"/>
       <style>{`
         *{font-family:'Noto Sans JP','Hiragino Kaku Gothic Pro',sans-serif;box-sizing:border-box;-webkit-font-smoothing:antialiased;}
@@ -893,6 +923,7 @@ export default function FireCompass(){
         ::-webkit-scrollbar{width:4px;height:4px;}
         ::-webkit-scrollbar-track{background:${C.bg};}
         ::-webkit-scrollbar-thumb{background:${C.g300};border-radius:4px;}
+        .hide-scrollbar::-webkit-scrollbar{display:none;}
         input:focus,select:focus,textarea:focus{outline:2px solid ${C.g500}!important;outline-offset:1px;}
         button{transition:transform 0.1s,filter 0.1s,box-shadow 0.1s;}
         button:hover{filter:brightness(1.05);}
@@ -901,7 +932,7 @@ export default function FireCompass(){
       `}</style>
 
       {/* ──── HERO ──── */}
-      <div style={{maxWidth:680,margin:"0 auto",padding:isMobile?"12px 10px 0":"20px 16px 0"}}>
+      <div style={{maxWidth:760,margin:"0 auto",padding:isMobile?"12px 10px 0":"20px 20px 0",boxSizing:"border-box",width:"100%"}}>
         {/* Logo row */}
         <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:14}}>
           <div style={{display:"flex",alignItems:"center",gap:10}}>
@@ -1190,9 +1221,9 @@ export default function FireCompass(){
       </div>
 
       {/* ──── TABS + FORM ──── */}
-      <div style={{maxWidth:680,margin:"0 auto",padding:isMobile?"0 10px":"0 16px"}}>
+      <div style={{maxWidth:760,margin:"0 auto",padding:isMobile?"0 10px":"0 20px",boxSizing:"border-box",width:"100%"}}>
         {/* Tab bar */}
-        <div style={{display:"flex",gap:3,marginBottom:12,overflowX:"auto",paddingBottom:2,scrollbarWidth:"none"}}>
+        <div style={{display:"flex",gap:3,marginBottom:12,overflowX:"auto",paddingBottom:2,scrollbarWidth:"none",WebkitOverflowScrolling:"touch",msOverflowStyle:"none"}}>
           {ITABS.map((t,i)=>(
             <button key={t} onClick={()=>setItab(i)}
               style={{padding:"7px 11px",borderRadius:8,border:"none",whiteSpace:"nowrap",flexShrink:0,
@@ -1225,7 +1256,7 @@ export default function FireCompass(){
               <span style={{fontSize:13,fontWeight:600,color:C.t1}}>パートナー・配偶者がいる</span>
             </label>
             {form.hasPartner&&<div style={{background:C.muted,borderRadius:11,padding:14,border:`1px solid ${C.bdr}`}}>
-              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:10}}>
+              <div style={{display:"grid",gridTemplateColumns:isMobile?"1fr":"1fr 1fr",gap:10,marginBottom:10}}>
                 <div><Lbl>パートナーの年齢</Lbl><Num value={form.partnerAge} onChange={v=>setF("partnerAge",v)} unit="歳" min={18} max={80}/></div>
                 <div><Lbl>パートナーの退職予定</Lbl><Num value={form.partnerRetireAge} onChange={v=>setF("partnerRetireAge",v)} unit="歳" min={30} max={90}/></div>
               </div>
@@ -1267,7 +1298,7 @@ export default function FireCompass(){
                 シミュレーションは<b>運用資産のみ</b>を投資に回し、生活防衛資金は普通預金等で別途保管します。
               </div>
             </div>
-            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12,marginBottom:12}}>
+            <div style={{display:"grid",gridTemplateColumns:isMobile?"1fr":"1fr 1fr",gap:12,marginBottom:12}}>
               <div>
                 <Lbl tip="株式・投信・NISA・iDeCoなど実際に運用している資産の合計">運用する金融資産</Lbl>
                 <Num value={form.investAsset} onChange={v=>setF("investAsset",v)} unit="万円" step={100}/>
@@ -1301,7 +1332,7 @@ export default function FireCompass(){
               </div>
             </label>
             {form.hasHome&&<div style={{background:C.muted,borderRadius:11,padding:14,border:`1px solid ${C.bdr}`}}>
-              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
+              <div style={{display:"grid",gridTemplateColumns:isMobile?"1fr":"1fr 1fr",gap:10}}>
                 <div><Lbl>不動産の評価額</Lbl><Num value={form.homeValue} onChange={v=>setF("homeValue",v)} unit="万円" step={100}/></div>
                 <div><Lbl>住宅ローン残債</Lbl><Num value={form.homeLoan} onChange={v=>setF("homeLoan",v)} unit="万円" step={100}/></div>
               </div>
@@ -1394,13 +1425,35 @@ export default function FireCompass(){
                 </label>
               ))}
             </div>
-            <div style={{display:"grid",gridTemplateColumns:isMobile?"1fr 1fr":"repeat(3,1fr)",gap:10,marginBottom:12}}>
+            <div style={{display:"grid",gridTemplateColumns:isMobile?"1fr 1fr":"repeat(3,1fr)",gap:10,marginBottom:4}}>
               <div><Lbl>受給開始年齢</Lbl><Num value={form.pensionStartAge} onChange={v=>setF("pensionStartAge",v)} unit="歳" min={60} max={75}/></div>
               {form.pensionType==="kosei"&&<>
                 <div><Lbl>厚生年金加入年数</Lbl><Num value={form.kosei_years} onChange={v=>setF("kosei_years",v)} unit="年" min={0} max={50}/></div>
                 <div><Lbl>退職直前年収</Lbl><Num value={form.kosei_lastSalary} onChange={v=>setF("kosei_lastSalary",v)} unit="万円" step={10}/></div>
               </>}
             </div>
+            {/* 繰り上げ・繰り下げ増減率バッジ */}
+            {(()=>{
+              const startAge = form.pensionStartAge||65;
+              const months = (startAge - 65) * 12;
+              if(months === 0) return (
+                <div style={{fontSize:11,color:C.t3,marginBottom:12,padding:"6px 10px",background:C.muted,borderRadius:8}}>
+                  65歳受給（増減なし・基準額）
+                </div>
+              );
+              const rate = months > 0
+                ? (months * 0.7).toFixed(1)
+                : (Math.abs(months) * 0.4).toFixed(1);
+              const isDefer = months > 0;
+              return (
+                <div style={{fontSize:11,fontWeight:700,marginBottom:12,padding:"6px 12px",borderRadius:8,display:"inline-flex",alignItems:"center",gap:6,
+                  background:isDefer?"#f0fdf4":"#fff7ed",color:isDefer?C.g700:"#c2410c",border:`1px solid ${isDefer?C.g300:"#fed7aa"}`}}>
+                  {isDefer?"📈 繰り下げ":"📉 繰り上げ"}
+                  <span style={{fontSize:13,fontWeight:900}}>{isDefer?"+":"−"}{rate}%</span>
+                  <span style={{fontWeight:400,color:C.t3}}>（{startAge}歳受給・{Math.abs(months)}ヶ月分）</span>
+                </div>
+              );
+            })()}
             {/* 付加年金 */}
             <label style={{display:"flex",alignItems:"flex-start",gap:9,padding:11,background:form.fuka_nenkin?C.g100:C.muted,
               borderRadius:10,cursor:"pointer",border:`1.5px solid ${form.fuka_nenkin?C.bdrS:C.bdr}`,marginBottom:10}}>
@@ -1441,6 +1494,13 @@ export default function FireCompass(){
               <div style={{fontSize:11,color:C.t3,marginBottom:3}}>ご本人の年金（月額・概算）</div>
               <div style={{fontSize:30,fontWeight:800,color:C.g800,fontFamily:SERIF}}>{Math.round(pens.total/12/MAN*10)/10}<span style={{fontSize:14,color:C.t3,fontFamily:FONT}}>万円/月</span></div>
               <div style={{fontSize:10,color:C.t3,marginTop:3}}>基礎 {Math.round(pens.base/MAN)}万/年　{pens.fuka>0?`+ 付加 ${Math.round(pens.fuka/MAN)}万/年　`:""}厚生 {Math.round(pens.kosei/MAN)}万/年</div>
+              {(()=>{const m=(form.pensionStartAge-65)*12; if(m===0)return null;
+                const isD=m>0; const r=isD?(m*0.7).toFixed(1):(Math.abs(m)*0.4).toFixed(1);
+                return <div style={{marginTop:6,fontSize:10,fontWeight:700,display:"inline-block",
+                  padding:"2px 8px",borderRadius:99,background:isD?"#f0fdf4":"#fff7ed",color:isD?C.g700:"#c2410c"}}>
+                  {isD?"📈 繰り下げ":"📉 繰り上げ"} {form.pensionStartAge}歳受給 {isD?"+":"−"}{r}%
+                </div>;
+              })()}
             </div>
             {form.hasPartner&&<>
               <div style={{fontSize:13,fontWeight:700,color:C.t1,marginBottom:10}}>パートナーの年金</div>
@@ -1464,7 +1524,7 @@ export default function FireCompass(){
                       </label>
                     ))}
                   </div>
-                  {form.p_pensionType==="kosei"&&<div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:12}}>
+                  {form.p_pensionType==="kosei"&&<div style={{display:"grid",gridTemplateColumns:isMobile?"1fr":"1fr 1fr",gap:10,marginBottom:12}}>
                     <div><Lbl>厚生年金加入年数</Lbl><Num value={form.p_kosei_years} onChange={v=>setF("p_kosei_years",v)} unit="年" min={0} max={50}/></div>
                     <div><Lbl>退職直前の年収</Lbl><Num value={form.p_salary} onChange={v=>setF("p_salary",v)} unit="万円" step={10}/></div>
                   </div>}
@@ -1497,7 +1557,7 @@ export default function FireCompass(){
                   <button onClick={()=>setF("children",form.children.filter((_,j)=>j!==i))}
                     style={{padding:"3px 9px",borderRadius:7,border:`1px solid ${C.err}44`,background:"transparent",color:C.err,fontSize:12,cursor:"pointer"}}>削除</button>
                 </div>
-                <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:10}}>
+                <div style={{display:"grid",gridTemplateColumns:isMobile?"1fr":"1fr 1fr",gap:10,marginBottom:10}}>
                   <div><Lbl>名前</Lbl>
                     <input value={c.name||""} onChange={e=>{const arr=[...form.children];arr[i]={...c,name:e.target.value};setF("children",arr);}} placeholder="長男・長女など"
                       style={{width:"100%",padding:"8px 10px",borderRadius:8,border:`1.5px solid ${C.bdr}`,background:"#fff",color:C.t1,fontSize:13,outline:"none",boxSizing:"border-box",fontFamily:FONT}}/>
@@ -1571,7 +1631,7 @@ export default function FireCompass(){
                 <span style={{fontSize:13,fontWeight:600,color:C.t1}}>生前贈与を受け取るプランを有効にする</span>
               </label>
               {form.giftReceiveActive&&<div style={{background:C.muted,borderRadius:11,padding:14,marginBottom:10}}>
-                <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:8}}>
+                <div style={{display:"grid",gridTemplateColumns:isMobile?"1fr":"1fr 1fr",gap:10,marginBottom:8}}>
                   <div><Lbl>年間受取額</Lbl><Num value={form.giftReceiveAmount} onChange={v=>setF("giftReceiveAmount",v)} unit="万円" step={10}/></div>
                   <div><Lbl>受取期間</Lbl><Num value={form.giftReceiveYears} onChange={v=>setF("giftReceiveYears",v)} unit="年" min={1} max={30}/></div>
                 </div>
@@ -1596,11 +1656,11 @@ export default function FireCompass(){
                 <span style={{fontSize:13,fontWeight:600,color:C.t1}}>親からの相続を見込む</span>
               </label>
               {form.inheritReceiveActive&&<div style={{background:C.muted,borderRadius:11,padding:14,marginBottom:12}}>
-                <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:10}}>
+                <div style={{display:"grid",gridTemplateColumns:isMobile?"1fr":"1fr 1fr",gap:10,marginBottom:10}}>
                   <div><Lbl tip="親の財産総額（不動産含む）の概算">親の総遺産額（概算）</Lbl><Num value={form.inheritReceiveAmount} onChange={v=>setF("inheritReceiveAmount",v)} unit="万円" step={100}/></div>
                   <div><Lbl tip="相続が発生する予定年（親の推定没年）">相続発生予定年</Lbl><Num value={form.inheritReceiveYear} onChange={v=>setF("inheritReceiveYear",Math.round(v))} unit="年" min={2024} max={2090} step={1}/></div>
                 </div>
-                <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:10}}>
+                <div style={{display:"grid",gridTemplateColumns:isMobile?"1fr":"1fr 1fr",gap:10,marginBottom:10}}>
                   <div><Lbl tip="あなた以外の兄弟姉妹の人数。0=一人っ子。遺産は人数+1で均等割り。">兄弟姉妹の人数</Lbl><Num value={form.inheritSiblings} onChange={v=>setF("inheritSiblings",Math.max(0,Math.round(v)))} unit="人（0=一人っ子）" min={0} max={10}/></div>
                   <div style={{display:"flex",alignItems:"flex-end",paddingBottom:2}}>
                     <div>
@@ -1692,7 +1752,7 @@ export default function FireCompass(){
                     <button onClick={()=>setF("lifeEvents",form.lifeEvents.filter((_,j)=>j!==i))}
                       style={{padding:"4px 9px",borderRadius:7,border:`1px solid ${C.err}44`,background:"transparent",color:C.err,fontSize:12,cursor:"pointer"}}>削除</button>
                   </div>
-                  <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:6}}>
+                  <div style={{display:"grid",gridTemplateColumns:isMobile?"1fr":"1fr 1fr",gap:10,marginBottom:6}}>
                     <div><Lbl>発生年</Lbl><Num value={ev.year} onChange={v=>{const evs=[...form.lifeEvents];evs[i]={...ev,year:v};setF("lifeEvents",evs);}} unit="年" min={curYear} max={2090} step={1}/></div>
                     <div><Lbl>費用</Lbl><Num value={ev.cost} onChange={v=>{const evs=[...form.lifeEvents];evs[i]={...ev,cost:v};setF("lifeEvents",evs);}} unit="万円" step={10}/></div>
                   </div>
@@ -1808,6 +1868,7 @@ export default function FireCompass(){
         @media print{.noprint{display:none!important;} body{-webkit-print-color-adjust:exact;print-color-adjust:exact;}}
         ::-webkit-scrollbar{width:4px;height:4px;}
         ::-webkit-scrollbar-thumb{background:${C.g300};border-radius:4px;}
+        .hide-scrollbar::-webkit-scrollbar{display:none;}
       `}</style>
 
       {/* Sticky header */}
@@ -1949,7 +2010,7 @@ export default function FireCompass(){
             {/* 最悪ケース対策提案 */}
             {worstFinal<=0&&safeWithdraw!==null&&<div style={{background:C.errL,borderRadius:14,padding:16,marginBottom:16,border:`1.5px solid ${C.err}44`}}>
               <div style={{fontSize:13,fontWeight:800,color:C.err,marginBottom:10}}>⚠️ 最悪シナリオ対策 — どちらかで80%安全ラインに到達</div>
-              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
+              <div style={{display:"grid",gridTemplateColumns:isMobile?"1fr":"1fr 1fr",gap:10}}>
                 <div style={{background:"#fff",borderRadius:10,padding:"12px 14px",border:`1px solid ${C.err}22`}}>
                   <div style={{fontSize:10,color:C.t3,marginBottom:4}}>💸 取り崩しをこの額に減らす</div>
                   <div style={{fontSize:22,fontWeight:900,color:C.err,fontFamily:SERIF}}>{safeWithdraw}万円/年</div>
@@ -1968,7 +2029,7 @@ export default function FireCompass(){
               <div style={{fontSize:13,fontWeight:800,color:C.t1,marginBottom:10}}>
                 💎 中央値シナリオの余剰資金 <span style={{color:C.g700,fontFamily:SERIF}}>{surplus.toLocaleString()}万円</span> でできること
               </div>
-              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
+              <div style={{display:"grid",gridTemplateColumns:isMobile?"1fr":"1fr 1fr",gap:8}}>
                 {affordableItems.slice(0,10).map(it=>{
                   const catBg={"旅行":"#eff6ff","ファッション":"#fdf2f8","美容":"#fdf2f8","グルメ":"#fff7ed","時計":"#fffbeb","不動産":"#f0fdf4","車":"#f8fafc","生活":"#f5f3ff","教育":"#ecfdf5"}[it.cat]||"#f8fafc";
                   const catCol={"旅行":"#0369a1","ファッション":"#be185d","美容":"#be185d","グルメ":"#c2410c","時計":"#92400e","不動産":"#15803d","車":"#334155","生活":"#6d28d9","教育":"#065f46"}[it.cat]||"#374151";
@@ -2246,7 +2307,7 @@ export default function FireCompass(){
           </Card>
           {form.giftActive&&<Card style={{background:C.g100,border:`1px solid ${C.g200}`,marginBottom:14}}>
             <div style={{fontSize:14,fontWeight:700,color:C.g800,marginBottom:10}}>🎁 生前贈与による節税効果</div>
-            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
+            <div style={{display:"grid",gridTemplateColumns:isMobile?"1fr":"1fr 1fr",gap:10}}>
               <div style={{background:C.card,borderRadius:9,padding:"10px 13px"}}>
                 <div style={{fontSize:10,color:C.t3}}>総贈与額（{form.giftYears}年間）</div>
                 <div style={{fontSize:18,fontWeight:800,color:C.g700,fontFamily:SERIF}}>{fmtM(form.giftAmount*form.giftPeople*form.giftYears)}</div>
