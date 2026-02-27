@@ -52,19 +52,19 @@ const Logo = ({ s = 40 }) => (
   <svg width={s} height={s} viewBox="0 0 48 48" fill="none">
     <defs>
       <linearGradient id="lg1" x1="0" y1="0" x2="1" y2="1">
-        <stop offset="0%" stopColor="#15803d"/><stop offset="100%" stopColor="#052e16"/>
+        <stop offset="0%" stopColor="#1e293b"/><stop offset="100%" stopColor="#0f172a"/>
       </linearGradient>
       <linearGradient id="lg2" x1="0" y1="0" x2="0" y2="1">
         <stop offset="0%" stopColor="#fcd34d"/><stop offset="100%" stopColor="#e8540a"/>
       </linearGradient>
     </defs>
-    <circle cx="24" cy="24" r="22" fill="url(#lg1)" stroke="#2d9156" strokeWidth="0.8"/>
-    <circle cx="24" cy="24" r="18" stroke="#22c55e" strokeWidth="0.4" strokeDasharray="2 3"/>
+    <circle cx="24" cy="24" r="22" fill="url(#lg1)" stroke="#d97706" strokeWidth="0.8"/>
+    <circle cx="24" cy="24" r="18" stroke="#fbbf24" strokeWidth="0.4" strokeDasharray="2 3"/>
     {/* Compass arrows */}
     <polygon points="24,5 26.5,21 24,24 21.5,21" fill="url(#lg2)"/>
-    <polygon points="24,43 26.5,27 24,24 21.5,27" fill="#166534"/>
-    <polygon points="5,24 21,21.5 24,24 21,26.5" fill="#166534"/>
-    <polygon points="43,24 27,21.5 24,24 27,26.5" fill="#4ade80"/>
+    <polygon points="24,43 26.5,27 24,24 21.5,27" fill="#334155"/>
+    <polygon points="5,24 21,21.5 24,24 21,26.5" fill="#334155"/>
+    <polygon points="43,24 27,21.5 24,24 27,26.5" fill="#94a3b8"/>
     <circle cx="24" cy="24" r="3.5" fill="#fcd34d"/>
     <circle cx="24" cy="24" r="1.5" fill="#0f172a"/>
   </svg>
@@ -101,11 +101,11 @@ function getAllFunds(cf){ return [...BUILT_IN_FUNDS,...(cf||[])]; }
 const MAN = 10000;
 const toY  = v => v * MAN;
 const toM  = v => v / MAN;
-const fmt  = v => v>=1e8 ? `${(v/1e8).toFixed(1)}億円` : `${Math.round(v/MAN).toLocaleString()}万円`;
+const fmt  = v => { if(!isFinite(v)||isNaN(v)) return "---"; return v>=1e8 ? `${(v/1e8).toFixed(1)}億円` : `${Math.round(v/MAN).toLocaleString()}万円`; };
 // fmtM: 万円単位の数値 → "XX万円" 文字列（万円を含む）
-const fmtM = v => `${Math.round(v).toLocaleString()}万円`;
+const fmtM = v => { if(!isFinite(v)||isNaN(v)) return "---万円"; return `${Math.round(v).toLocaleString()}万円`; };
 // fmtMn: 万円単位の数値 → "XX万" 文字列（万円なし、後ろに単位を別途付ける場合）
-const fmtMn = v => `${Math.round(v).toLocaleString()}万`;
+const fmtMn = v => { if(!isFinite(v)||isNaN(v)) return "---"; return `${Math.round(v).toLocaleString()}万`; };
 const rnd  = () => Math.sqrt(-2*Math.log(Math.random()+1e-10))*Math.cos(2*Math.PI*Math.random());
 
 // 確実性を担保できる最大試行回数を動的に選択
@@ -275,7 +275,7 @@ function diagFire(form){
   const e=form.annualExpense, s=form.sideIncome, c=form.currentAsset;
   return [
     {key:"lean",label:"リーンFIRE",  target:e*20,     color:C.g500, desc:"20倍ルール（5%取崩）。質素な完全リタイア。"},
-    {key:"fire",label:"FIRE 4%",    target:e*25,     color:C.g700, desc:"25倍ルール（4%取崩）。最もポピュラー。"},
+    {key:"fire",label:"FIRE（標準）",    target:e*25,     color:C.g700, desc:"25倍ルール（4%取崩）。最もポピュラー。"},
     {key:"side",label:"サイドFIRE", target:(e-s)*25, color:C.g600, desc:"副業収入で生活費を補填するセミリタイア。"},
     {key:"fat", label:"FATFIRE",    target:e*33,     color:C.gold, desc:"33倍ルール（3%取崩）。余裕のリタイア。"},
   ].map(f=>({...f,achieved:c>=f.target,progress:Math.min(100,c/Math.max(f.target,1)*100),gap:Math.max(0,f.target-c)}));
@@ -359,7 +359,7 @@ function Lbl({children,tip}){
             flexShrink:0,fontWeight:700,lineHeight:1,fontFamily:FONT}}>?</button>}
       </div>
       {tip&&show&&<div style={{marginTop:4,padding:"8px 12px",background:C.deep,color:"#d1fae5",
-        borderRadius:8,fontSize:11,lineHeight:1.7,boxShadow:"0 4px 16px rgba(0,0,0,0.3)"}}>{tip}</div>}
+        borderRadius:8,fontSize:11,lineHeight:1.7,boxShadow:"0 2px 8px rgba(0,0,0,0.15)"}}>{tip}</div>}
     </div>
   );
 }
@@ -408,7 +408,7 @@ const Tip=({active,payload,label})=>{
   if(!active||!payload?.length)return null;
   return(
     <div style={{background:"#fff",border:`1px solid ${C.bdr}`,borderRadius:10,
-      padding:"10px 14px",boxShadow:"0 4px 16px rgba(10,64,32,0.12)",fontSize:12,fontFamily:FONT}}>
+      padding:"10px 14px",boxShadow:"0 2px 8px rgba(0,0,0,0.08)",fontSize:12,fontFamily:FONT}}>
       <div style={{fontWeight:700,color:C.t1,marginBottom:4}}>{label}</div>
       {payload.filter(p=>p.value!=null&&p.value!==0).map(p=>(
         <div key={p.name} style={{color:p.color||C.g600,marginBottom:2}}>
@@ -566,7 +566,7 @@ function FundAllocEditor({allocs,onChange,customFunds,onCustomFundsChange}){
                 <div key={col} onClick={()=>setCF(f=>({...f,color:col}))}
                   style={{width:22,height:22,borderRadius:"50%",background:col,cursor:"pointer",
                     border:cf.color===col?`2px solid ${C.t1}`:`2px solid transparent`,
-                    boxShadow:cf.color===col?`0 0 6px ${col}`:""}}/>
+                    boxShadow:cf.color===col?"0 0 0 2px rgba(0,0,0,0.15)":""}}/>
               ))}
             </div>
           </div>
@@ -629,7 +629,7 @@ function ShareCard({form,results,blended}){
     <div>
       <div ref={ref} style={{background:"linear-gradient(135deg,#14532d 0%,#166534 100%)",
         borderRadius:20,padding:28,fontFamily:FONT,maxWidth:480,
-        boxShadow:"0 20px 60px rgba(0,0,0,0.5)",position:"relative",overflow:"hidden"}}>
+        boxShadow:"0 4px 24px rgba(0,0,0,0.14)",position:"relative",overflow:"hidden"}}>
         {/* 背景デコ */}
         <div style={{position:"absolute",top:-60,right:-60,width:240,height:240,borderRadius:"50%",
           background:"radial-gradient(circle,rgba(234,88,12,0.18) 0%,transparent 70%)",pointerEvents:"none"}}/>
@@ -697,7 +697,7 @@ function ShareCard({form,results,blended}){
         style={{marginTop:12,width:"100%",padding:"13px",borderRadius:12,border:"none",
           background:saving?C.g300:`linear-gradient(135deg,${C.g700},${C.g500})`,
           color:"#fff",fontSize:14,fontWeight:800,cursor:saving?"default":"pointer",
-          boxShadow:saving?"none":`0 6px 20px rgba(26,140,63,0.4)`}}>
+          boxShadow:saving?"none":`0 3px 10px rgba(26,140,63,0.22)`}}>
         {saving?"⏳ 生成中...":"📥 シェア画像をダウンロード"}
       </button>
       <div style={{fontSize:10,color:C.t3,textAlign:"center",marginTop:4}}>PNG形式 / X・Instagramに投稿可能</div>
@@ -909,7 +909,7 @@ export default function FireCompass(){
 
         {/* Hero card — Left: text panel / Right: travel illustration */}
         <div style={{borderRadius:22,marginBottom:14,overflow:"hidden",
-          boxShadow:"0 20px 60px rgba(7,60,120,0.22)",display:"flex",minHeight:230}}>
+          boxShadow:"0 2px 16px rgba(7,60,120,0.10)",display:"flex",minHeight:230}}>
 
           {/* ── LEFT: Text panel (solid dark background, fully readable) ── */}
           <div style={{flex:"0 0 54%",background:"linear-gradient(160deg,#0c1445 0%,#1e3a5f 100%)",
@@ -941,7 +941,7 @@ export default function FireCompass(){
               {/* FIRE type pills */}
               <div style={{display:"flex",gap:4,flexWrap:"wrap"}}>
                 {[{l:"リーンFIRE",c:"#4ade80"},{l:"サイドFIRE",c:"#fcd34d"},
-                  {l:"FIRE 4%",c:"#fb923c"},{l:"FATFIRE",c:"#f87171"}].map(t=>(
+                  {l:"FIRE（標準）",c:"#fb923c"},{l:"FATFIRE",c:"#f87171"}].map(t=>(
                   <div key={t.l} style={{background:"rgba(255,255,255,0.07)",
                     borderRadius:6,padding:"4px 8px",border:`1px solid ${t.c}44`}}>
                     <div style={{fontSize:9,color:t.c,fontWeight:700}}>{t.l}</div>
@@ -951,213 +951,232 @@ export default function FireCompass(){
             </div>
           </div>
 
-          {/* ── RIGHT: Illustration only (no text) ── */}
+          {/* ── RIGHT: big suitcase centred, stickers inside ── */}
           <div style={{flex:"0 0 46%",position:"relative",overflow:"hidden"}}>
-            <svg width="100%" height="100%" viewBox="0 0 312 230" preserveAspectRatio="xMidYMid slice"
+            <svg width="100%" height="100%" viewBox="0 0 320 240" preserveAspectRatio="xMidYMid slice"
               style={{display:"block",width:"100%",height:"100%"}}>
               <defs>
-                <linearGradient id="sky2" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#38bdf8"/>
-                  <stop offset="65%" stopColor="#7dd3fc"/>
-                  <stop offset="100%" stopColor="#bae6fd"/>
+                <linearGradient id="il_sky" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%"   stopColor="#29b6f6"/>
+                  <stop offset="60%"  stopColor="#64d2f7"/>
+                  <stop offset="100%" stopColor="#b3e5fc"/>
                 </linearGradient>
-                <linearGradient id="sea2" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#0284c7"/>
-                  <stop offset="100%" stopColor="#075985"/>
+                <linearGradient id="il_sea" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%"   stopColor="#0288d1"/>
+                  <stop offset="100%" stopColor="#01579b"/>
                 </linearGradient>
-                <linearGradient id="sand2" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#fde68a"/>
-                  <stop offset="100%" stopColor="#f5d27a"/>
+                <linearGradient id="il_sand" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%"   stopColor="#ffe082"/>
+                  <stop offset="100%" stopColor="#ffca28"/>
                 </linearGradient>
-                <linearGradient id="bag2" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#c2763a"/>
-                  <stop offset="100%" stopColor="#923f10"/>
+                <linearGradient id="il_bag" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%"   stopColor="#c87838"/>
+                  <stop offset="100%" stopColor="#7c3810"/>
                 </linearGradient>
-                <radialGradient id="sun2" cx="50%" cy="50%" r="50%">
-                  <stop offset="0%" stopColor="#fef9c3" stopOpacity="1"/>
-                  <stop offset="100%" stopColor="#fef08a" stopOpacity="0"/>
+                <radialGradient id="il_sun" cx="50%" cy="50%" r="50%">
+                  <stop offset="0%"   stopColor="#fff9c3"/>
+                  <stop offset="100%" stopColor="#fff9c300"/>
                 </radialGradient>
-                <filter id="blur2"><feGaussianBlur stdDeviation="2"/></filter>
+                <filter id="il_blur"><feGaussianBlur stdDeviation="3"/></filter>
+                <filter id="il_drop"><feDropShadow dx="0" dy="3" stdDeviation="4" floodOpacity="0.14"/></filter>
+                {/* clip stickers strictly inside bag face */}
+                <clipPath id="il_bagClip">
+                  <rect x="50" y="84" width="220" height="138" rx="12"/>
+                </clipPath>
               </defs>
 
               {/* Sky */}
-              <rect width="312" height="230" fill="url(#sky2)"/>
+              <rect width="320" height="240" fill="url(#il_sky)"/>
 
-              {/* Sun */}
-              <circle cx="258" cy="50" r="50" fill="url(#sun2)" opacity="0.7"/>
-              <circle cx="258" cy="50" r="22" fill="#fff9c3" opacity="0.95"/>
-              <circle cx="258" cy="50" r="16" fill="#fef08a"/>
+              {/* Sun — top right */}
+              <circle cx="286" cy="38" r="55" fill="url(#il_sun)" opacity="0.65"/>
+              <circle cx="286" cy="38" r="25" fill="#fff9c3" opacity="0.96"/>
+              <circle cx="286" cy="38" r="18" fill="#ffe566"/>
 
               {/* Clouds */}
-              <g filter="url(#blur2)" opacity="0.9">
-                <ellipse cx="60" cy="42" rx="44" ry="18" fill="#fff"/>
-                <ellipse cx="38" cy="50" rx="30" ry="14" fill="#fff"/>
-                <ellipse cx="86" cy="50" rx="30" ry="14" fill="#fff"/>
+              <g filter="url(#il_blur)" opacity="0.88">
+                <ellipse cx="72"  cy="35" rx="48" ry="20" fill="#fff"/>
+                <ellipse cx="48"  cy="44" rx="33" ry="16" fill="#fff"/>
+                <ellipse cx="98"  cy="44" rx="33" ry="16" fill="#fff"/>
               </g>
-              <g filter="url(#blur2)" opacity="0.65">
-                <ellipse cx="175" cy="32" rx="32" ry="14" fill="#fff"/>
-                <ellipse cx="155" cy="40" rx="24" ry="12" fill="#fff"/>
-                <ellipse cx="198" cy="40" rx="24" ry="12" fill="#fff"/>
-              </g>
-
-              {/* Sea */}
-              <path d="M0 152 Q78 144 156 152 Q234 160 312 152 L312 230 L0 230 Z" fill="url(#sea2)"/>
-              <path d="M10 165 Q50 161 90 165" stroke="rgba(255,255,255,0.3)" strokeWidth="2" fill="none"/>
-              <path d="M180 170 Q220 166 260 170" stroke="rgba(255,255,255,0.25)" strokeWidth="1.5" fill="none"/>
-
-              {/* Sand */}
-              <path d="M0 192 Q78 185 156 190 Q234 195 312 188 L312 230 L0 230 Z" fill="url(#sand2)"/>
-              <path d="M0 200 Q78 196 156 198 Q234 200 312 196 L312 203 L0 203 Z" fill="rgba(180,140,60,0.15)"/>
-
-              {/* ── SUITCASE (centered, bigger) ── */}
-              {/* Handle */}
-              <path d="M126 128 L126 116 Q156 106 186 116 L186 128" fill="none" stroke="#5a2d0c" strokeWidth="5" strokeLinecap="round"/>
-              <rect x="122" y="124" width="8" height="10" rx="3" fill="#5a2d0c"/>
-              <rect x="182" y="124" width="8" height="10" rx="3" fill="#5a2d0c"/>
-              {/* Body */}
-              <rect x="108" y="128" width="96" height="82" rx="10" fill="url(#bag2)" stroke="#7c3810" strokeWidth="1.5"/>
-              {/* Lid line */}
-              <rect x="108" y="140" width="96" height="4" fill="rgba(0,0,0,0.2)"/>
-              {/* Center band */}
-              <rect x="108" y="164" width="96" height="8" fill="rgba(0,0,0,0.18)"/>
-              {/* Clasp */}
-              <rect x="147" y="160" width="18" height="14" rx="3" fill="#d4af37" stroke="#b8860b" strokeWidth="1.2"/>
-              <rect x="151" y="163" width="10" height="8" rx="2" fill="#b8860b"/>
-              {/* Shine */}
-              <rect x="112" y="132" width="40" height="3" rx="1.5" fill="rgba(255,255,255,0.18)"/>
-
-              {/*
-                スーツケース本体: x108~204, y128~210 (幅96, 高82)
-                バンド: y164~172  クラスプ: x147~165, y160~174
-                革が見える余白を確保するため各ステッカーをr≤16 or 32×26px以下に抑制
-                配置:
-                  ITALIA  円 r=16 → 左上コーナー (126, 148) — 革上部左が見える
-                  PARIS   矩形 38×30 → 右上コーナー (184, 146) — 革上部右が見える
-                  GREECE  矩形 40×30 → 左下コーナー (128, 196) — 革下部左が見える
-                  TOKYO   矩形 34×34 → 右下コーナー (182, 196) — 革下部右が見える
-                中央エリア(クラスプ周辺)・バンド・鞄の輪郭は常に露出
-              */}
-
-              {/* ══ ITALIA — circle r=16, 左上 (126,147) ══ */}
-              <g transform="translate(126,147) rotate(-7)">
-                <circle r="16" fill="rgba(0,0,0,0.18)" transform="translate(1.5,2)"/>
-                <circle r="16" fill="#cc1a2e"/>
-                <circle r="16" fill="none" stroke="#fff" strokeWidth="2"/>
-                <circle r="13" fill="#b8102a"/>
-                {/* Vespa — scaled to fit r=13 inner disc */}
-                <ellipse cx="0.5" cy="3.5" rx="7.5" ry="5" fill="#e84a5f"/>
-                <ellipse cx="-0.5" cy="0" rx="4" ry="2.2" fill="#aa1020"/>
-                <ellipse cx="-3" cy="-0.5" rx="2.2" ry="3" fill="rgba(180,220,255,0.75)" stroke="#ccc" strokeWidth="0.6"/>
-                <path d="M-5.5,0.5 Q-7,-2.5 -5.5,-4" stroke="#777" strokeWidth="1.3" fill="none" strokeLinecap="round"/>
-                <circle cx="-5.5" cy="-4" r="1.3" fill="#555"/>
-                <path d="M7.5,5 Q9.5,5.5 10,8" stroke="#aaa" strokeWidth="1.3" fill="none" strokeLinecap="round"/>
-                <circle cx="-7" cy="7.5" r="3.8" fill="#222" stroke="#555" strokeWidth="0.8"/>
-                <circle cx="-7" cy="7.5" r="1.8" fill="#666"/>
-                <circle cx="-7" cy="7.5" r="0.7" fill="#bbb"/>
-                <circle cx="7" cy="7.5" r="3.8" fill="#222" stroke="#555" strokeWidth="0.8"/>
-                <circle cx="7" cy="7.5" r="1.8" fill="#666"/>
-                <circle cx="7" cy="7.5" r="0.7" fill="#bbb"/>
-                {/* ITALIA arc */}
-                <path id="italiaArc2" d="M -13,0 A 13,13 0 0,1 13,0" fill="none"/>
-                <text fontFamily="Georgia,serif" fontWeight="bold" fontSize="4.8" fill="#fff" letterSpacing="1.8">
-                  <textPath href="#italiaArc2" startOffset="12%">I T A L I A</textPath>
-                </text>
-                <circle cx="-5" cy="13" r="1" fill="rgba(255,220,180,0.7)"/>
-                <circle cx="0" cy="14.5" r="1" fill="rgba(255,220,180,0.7)"/>
-                <circle cx="5" cy="13" r="1" fill="rgba(255,220,180,0.7)"/>
-              </g>
-
-              {/* ══ PARIS — 38×30, 右上 (184,146) ══ */}
-              <g transform="translate(184,146) rotate(5)">
-                <rect x="-19" y="-15" width="38" height="30" rx="5" fill="rgba(0,0,0,0.18)" transform="translate(1.5,2)"/>
-                <rect x="-19" y="-15" width="38" height="30" rx="5" fill="#0f2d6b"/>
-                <rect x="-19" y="-15" width="38" height="30" rx="5" fill="none" stroke="#f5cc40" strokeWidth="2"/>
-                {/* night sky */}
-                <rect x="-17" y="-13" width="34" height="18" rx="3" fill="#0a1f52"/>
-                {/* Eiffel Tower */}
-                <path d="M-4.5,10 L-9,10 L-6,3 Z" fill="#7ab0d8"/>
-                <path d="M4.5,10 L9,10 L6,3 Z" fill="#5898c8"/>
-                <rect x="-6.5" y="1" width="13" height="1.8" rx="0.4" fill="#9cc8e8"/>
-                <path d="M-4.5,1 L4.5,1 L2.5,-5 L-2.5,-5 Z" fill="#7ab0d8"/>
-                <rect x="-3" y="-6.5" width="6" height="1.5" rx="0.4" fill="#aad4f0"/>
-                <path d="M-2,-6.5 L2,-6.5 L1,-12 L-1,-12 Z" fill="#9cc8e8"/>
-                <path d="M-0.7,-12 L0.7,-12 L0,-17 Z" fill="#cce8ff"/>
-                <circle cx="0" cy="-17" r="1.2" fill="#ffd700" opacity="0.95"/>
-                <circle cx="-14" cy="-10" r="0.9" fill="#f5cc40" opacity="0.85"/>
-                <circle cx="13" cy="-7" r="0.7" fill="#f5cc40" opacity="0.7"/>
-                <circle cx="-11" cy="-5" r="0.6" fill="#f5cc40" opacity="0.6"/>
-                {/* PARIS banner */}
-                <rect x="-16" y="10" width="32" height="8" rx="2.5" fill="#f5cc40"/>
-                <text x="0" y="16.5" textAnchor="middle" fill="#0f2d6b" fontSize="6" fontWeight="bold"
-                  fontFamily="Georgia,serif" letterSpacing="1.8">PARIS</text>
-              </g>
-
-              {/* ══ GREECE — 42×30, 左下 (128,196) ══ */}
-              <g transform="translate(128,196) rotate(-4)">
-                <rect x="-21" y="-15" width="42" height="30" rx="5" fill="rgba(0,0,0,0.18)" transform="translate(1.5,2)"/>
-                <rect x="-21" y="-15" width="42" height="30" rx="5" fill="#1755a8"/>
-                <rect x="-21" y="-15" width="42" height="30" rx="5" fill="none" stroke="#fff" strokeWidth="2"/>
-                <rect x="-19" y="-13" width="38" height="16" rx="2" fill="#3b7fd4" opacity="0.55"/>
-                {/* Parthenon steps */}
-                <rect x="-16" y="3" width="32" height="2.5" rx="0.4" fill="#e8e0cc"/>
-                <rect x="-14" y="1" width="28" height="2.5" rx="0.4" fill="#f0e8d8"/>
-                {/* 6 columns */}
-                {[-11,-6.5,-2,2.5,7,11.5].map((cx,i)=>(
-                  <g key={i}>
-                    <rect x={cx-1.3} y="-9" width="2.6" height="11" rx="0.7" fill="#f5f0e8"/>
-                    <line x1={cx} y1="-9" x2={cx} y2="1" stroke="rgba(0,0,0,0.07)" strokeWidth="0.5"/>
-                    <rect x={cx-1.6} y="-10.2" width="3.2" height="1.2" rx="0.3" fill="#e8e0cc"/>
-                  </g>
-                ))}
-                <rect x="-14" y="-12" width="28" height="3" rx="0.4" fill="#e8e0cc"/>
-                <polygon points="-13,-12 13,-12 0,-20" fill="#ddd5bf"/>
-                <polygon points="-11,-12 11,-12 0,-18" fill="rgba(255,255,255,0.22)"/>
-                <text x="0" y="13" textAnchor="middle" fill="#fff" fontSize="6" fontWeight="bold"
-                  fontFamily="Georgia,serif" letterSpacing="1.5">GREECE</text>
-              </g>
-
-              {/* ══ TOKYO — 34×34, 右下 (183,196) ══ */}
-              <g transform="translate(183,196) rotate(6)">
-                <rect x="-17" y="-17" width="34" height="34" rx="5" fill="rgba(0,0,0,0.18)" transform="translate(1.5,2)"/>
-                <rect x="-17" y="-17" width="34" height="34" rx="5" fill="#fde8e8"/>
-                <rect x="-17" y="-17" width="34" height="34" rx="5" fill="none" stroke="#dc2626" strokeWidth="2"/>
-                <rect x="-15" y="-15" width="30" height="20" rx="2" fill="#fef0f0"/>
-                <rect x="-15" y="5" width="30" height="9" fill="#86efac"/>
-                <rect x="-15" y="8" width="30" height="6" fill="#4ade80"/>
-                {/* Mt Fuji */}
-                <polygon points="0,-15 -15,5 15,5" fill="#cbd5e1"/>
-                <polygon points="0,-15 -10,-2 10,-2" fill="#e2e8f0"/>
-                <polygon points="0,-15 -6,-7 6,-7" fill="#f1f5f9"/>
-                <polygon points="0,-15 -3,-11 3,-11" fill="#fff"/>
-                {/* Torii */}
-                <rect x="-11" y="-1" width="22" height="2.5" rx="1" fill="#dc2626"/>
-                <rect x="-9" y="2" width="18" height="1.8" rx="0.8" fill="#dc2626"/>
-                <rect x="-10" y="-1" width="3" height="13" rx="1" fill="#dc2626"/>
-                <rect x="7" y="-1" width="3" height="13" rx="1" fill="#dc2626"/>
-                <rect x="-11.5" y="10" width="5.5" height="2" rx="0.8" fill="#b91c1c"/>
-                <rect x="6" y="10" width="5.5" height="2" rx="0.8" fill="#b91c1c"/>
-                <text x="0" y="16" textAnchor="middle" fill="#dc2626" fontSize="5.5" fontWeight="bold"
-                  fontFamily="Georgia,serif" letterSpacing="1.5">TOKYO</text>
-              </g>
-
-              {/* Map (floating, top-right area, no text overlap) */}
-              <g transform="translate(255,110) rotate(-10)">
-                <rect x="-30" y="-35" width="62" height="68" rx="4" fill="#fef9e7" stroke="#d4a017" strokeWidth="1.5"/>
-                <rect x="-26" y="-31" width="54" height="60" rx="3" fill="#fffde7"/>
-                <path d="M-22,-20 Q-8,-12 8,-18 Q22,-24 26,-14" stroke="#a0522d" strokeWidth="1.2" fill="none" opacity="0.5"/>
-                <path d="M-22,-6 Q0,-2 14,-10 Q26,-16 26,-4" stroke="#a0522d" strokeWidth="0.8" fill="none" opacity="0.4"/>
-                <path d="M-22,7 Q-4,12 12,6 Q24,2 26,12" stroke="#a0522d" strokeWidth="0.8" fill="none" opacity="0.4"/>
-                <line x1="-4" y1="-33" x2="-4" y2="32" stroke="#c8a87a" strokeWidth="0.5" strokeDasharray="2 3" opacity="0.5"/>
-                <line x1="12" y1="-33" x2="12" y2="32" stroke="#c8a87a" strokeWidth="0.5" strokeDasharray="2 3" opacity="0.5"/>
-                <line x1="-28" y1="-4" x2="30" y2="-4" stroke="#c8a87a" strokeWidth="0.5" strokeDasharray="2 3" opacity="0.5"/>
-                <circle cx="8" cy="-10" r="4" fill="#e63946"/>
-                <line x1="8" y1="-6" x2="8" y2="-1" stroke="#e63946" strokeWidth="1.5"/>
+              <g filter="url(#il_blur)" opacity="0.55">
+                <ellipse cx="210" cy="26" rx="36" ry="14" fill="#fff"/>
+                <ellipse cx="188" cy="35" rx="26" ry="12" fill="#fff"/>
+                <ellipse cx="234" cy="35" rx="26" ry="12" fill="#fff"/>
               </g>
 
               {/* Birds */}
-              <path d="M230 68 Q234 63 238 68" stroke="#0c4a6e" strokeWidth="1.5" fill="none" strokeLinecap="round"/>
-              <path d="M246 56 Q251 51 256 56" stroke="#0c4a6e" strokeWidth="1.5" fill="none" strokeLinecap="round"/>
-              <path d="M88 72 Q92 67 96 72" stroke="#0c4a6e" strokeWidth="1.2" fill="none" strokeLinecap="round"/>
+              <path d="M130 55 Q135 49 140 55" stroke="#0c4a6e" strokeWidth="1.6" fill="none" strokeLinecap="round"/>
+              <path d="M150 44 Q156 38 162 44" stroke="#0c4a6e" strokeWidth="1.6" fill="none" strokeLinecap="round"/>
+
+              {/* Sea */}
+              <path d="M0 160 Q80 150 160 160 Q240 170 320 160 L320 240 L0 240 Z" fill="url(#il_sea)"/>
+              <path d="M10 173 Q52 168 94 173"  stroke="rgba(255,255,255,0.35)" strokeWidth="2" fill="none"/>
+              <path d="M200 177 Q244 172 288 177" stroke="rgba(255,255,255,0.28)" strokeWidth="1.8" fill="none"/>
+
+              {/* Sand */}
+              <path d="M0 197 Q80 187 160 194 Q240 201 320 193 L320 240 L0 240 Z" fill="url(#il_sand)"/>
+
+              {/* ══════════════════════════════════
+                  SUITCASE  centred x:50-270, y:70-222
+                  幅220 × 高152  ←大きく
+                  ══════════════════════════════════ */}
+
+              {/* Suitcase shadow */}
+              <ellipse cx="160" cy="224" rx="90" ry="9" fill="rgba(0,0,0,0.18)" filter="url(#il_blur)"/>
+
+              {/* Handle */}
+              <path d="M102 84 L102 66 Q160 50 218 66 L218 84"
+                fill="none" stroke="#3e1a04" strokeWidth="8" strokeLinecap="round"/>
+              <rect x="96"  y="78" width="14" height="15" rx="5" fill="#3e1a04"/>
+              <rect x="210" y="78" width="14" height="15" rx="5" fill="#3e1a04"/>
+
+              {/* Body */}
+              <rect x="50" y="84" width="220" height="138" rx="12"
+                fill="url(#il_bag)" stroke="#5a2008" strokeWidth="2.5" filter="url(#il_drop)"/>
+
+              {/* Lid separation */}
+              <rect x="50" y="104" width="220" height="6" fill="rgba(0,0,0,0.22)"/>
+
+              {/* Horizontal strap band */}
+              <rect x="50" y="148" width="220" height="14" fill="rgba(0,0,0,0.22)"/>
+
+              {/* Clasp */}
+              <rect x="136" y="142" width="48" height="24" rx="6" fill="#d4af37" stroke="#b8860b" strokeWidth="2"/>
+              <rect x="142" y="147" width="36" height="14" rx="4" fill="#b8860b"/>
+              <rect x="149" y="151" width="22" height="6"  rx="2" fill="#8b6914"/>
+
+              {/* Corner rivets */}
+              <circle cx="62"  cy="95"  r="5.5" fill="#5a2008" stroke="#3e1a04" strokeWidth="1.2"/>
+              <circle cx="258" cy="95"  r="5.5" fill="#5a2008" stroke="#3e1a04" strokeWidth="1.2"/>
+              <circle cx="62"  cy="214" r="5.5" fill="#5a2008" stroke="#3e1a04" strokeWidth="1.2"/>
+              <circle cx="258" cy="214" r="5.5" fill="#5a2008" stroke="#3e1a04" strokeWidth="1.2"/>
+
+              {/* Shine */}
+              <rect x="56" y="88" width="90" height="6" rx="3" fill="rgba(255,255,255,0.2)"/>
+
+              {/* ── STICKERS — clipped inside bag face ──
+                  鞄面 x:50-270, y:84-222
+                  上半(y84-148): 左=ITALIA(円r=26), 右=PARIS(56×44)
+                  下半(y162-222): 左=GREECE(60×42), 右=TOKYO(50×50)
+                  中央バンド(y148-162)とクラスプ周辺は避ける
+              */}
+              <g clipPath="url(#il_bagClip)">
+
+                {/* ▶ STICKER 1: ITALIA — 円 r=26, center(97,121) */}
+                <g transform="translate(97,121) rotate(-8)">
+                  <circle r="26" fill="rgba(0,0,0,0.2)" transform="translate(2,3)"/>
+                  <circle r="26" fill="#cc1a2e"/>
+                  <circle r="26" fill="none" stroke="#fff" strokeWidth="3"/>
+                  <circle r="22" fill="none" stroke="rgba(255,210,150,0.4)" strokeWidth="1"/>
+                  <circle r="19" fill="#aa1020"/>
+
+                  {/* Vespa — detailed */}
+                  <ellipse cx="1"   cy="6"   rx="12"  ry="8"   fill="#e84055"/>
+                  <ellipse cx="-1"  cy="1"   rx="6.5" ry="4"   fill="#880e1c"/>
+                  <ellipse cx="-4.5" cy="0"  rx="3.5" ry="5.5" fill="rgba(180,228,255,0.82)" stroke="#ccc" strokeWidth="0.8"/>
+                  <path d="M-9,1.5 Q-12,-4 -9,-7" stroke="#777" strokeWidth="2" fill="none" strokeLinecap="round"/>
+                  <circle cx="-9" cy="-7" r="2" fill="#444"/>
+                  <path d="M12,8 Q15,9.5 15.5,14" stroke="#aaa" strokeWidth="2" fill="none" strokeLinecap="round"/>
+                  {/* front wheel */}
+                  <circle cx="-12" cy="13" r="7" fill="#1a1a1a" stroke="#555" strokeWidth="1.2"/>
+                  <circle cx="-12" cy="13" r="3.5" fill="#555"/>
+                  <circle cx="-12" cy="13" r="1.4" fill="#bbb"/>
+                  {/* rear wheel */}
+                  <circle cx="12"  cy="13" r="7" fill="#1a1a1a" stroke="#555" strokeWidth="1.2"/>
+                  <circle cx="12"  cy="13" r="3.5" fill="#555"/>
+                  <circle cx="12"  cy="13" r="1.4" fill="#bbb"/>
+
+                  {/* ITALIA arc */}
+                  <path id="il_ia" d="M -21,0 A 21,21 0 0,1 21,0" fill="none"/>
+                  <text fontFamily="Georgia,serif" fontWeight="bold" fontSize="7.5" fill="#fff" letterSpacing="2.5">
+                    <textPath href="#il_ia" startOffset="10%">I T A L I A</textPath>
+                  </text>
+                  <circle cx="-7"  cy="23" r="1.6" fill="rgba(255,220,160,0.8)"/>
+                  <circle cx="0"   cy="25" r="1.6" fill="rgba(255,220,160,0.8)"/>
+                  <circle cx="7"   cy="23" r="1.6" fill="rgba(255,220,160,0.8)"/>
+                </g>
+
+                {/* ▶ STICKER 2: PARIS — 56×44, center(210,118) */}
+                <g transform="translate(210,118) rotate(6)">
+                  <rect x="-28" y="-22" width="56" height="44" rx="7" fill="rgba(0,0,0,0.2)" transform="translate(2,3)"/>
+                  <rect x="-28" y="-22" width="56" height="44" rx="7" fill="#0d2860"/>
+                  <rect x="-28" y="-22" width="56" height="44" rx="7" fill="none" stroke="#f5cc30" strokeWidth="3"/>
+                  <rect x="-26" y="-20" width="52" height="30" rx="4" fill="#081a42"/>
+                  {/* Eiffel Tower */}
+                  <path d="M-7,18 L-14,18 L-9,5 Z"  fill="#7ab0d8"/>
+                  <path d="M7,18  L14,18  L9,5  Z"   fill="#5e9ccc"/>
+                  <rect x="-10" y="3"  width="20" height="3"   rx="0.6" fill="#9ac8e8"/>
+                  <path d="M-7,3 L7,3 L4.5,-9 L-4.5,-9 Z"      fill="#7ab0d8"/>
+                  <rect x="-5"  y="-11" width="10" height="2.5" rx="0.5" fill="#aad4f0"/>
+                  <path d="M-3.5,-11 L3.5,-11 L2,-19 L-2,-19 Z" fill="#9ac8e8"/>
+                  <path d="M-1.2,-19 L1.2,-19 L0,-26 Z"          fill="#cce8ff"/>
+                  <circle cx="0" cy="-26" r="2" fill="#ffd700"/>
+                  {/* lattice */}
+                  <rect x="-7" y="-7"  width="14" height="1"   rx="0.4" fill="rgba(255,255,255,0.15)"/>
+                  <rect x="-4" y="-16" width="8"  height="0.9" rx="0.3" fill="rgba(255,255,255,0.12)"/>
+                  {/* stars */}
+                  <circle cx="-21" cy="-13" r="1.4" fill="#f5cc30" opacity="0.9"/>
+                  <circle cx="20"  cy="-9"  r="1.1" fill="#f5cc30" opacity="0.75"/>
+                  <circle cx="-17" cy="-6"  r="0.9" fill="#f5cc30" opacity="0.65"/>
+                  <circle cx="22"  cy="-17" r="0.8" fill="#f5cc30" opacity="0.55"/>
+                  {/* PARIS banner */}
+                  <rect x="-25" y="16" width="50" height="14" rx="4" fill="#f5cc30"/>
+                  <text x="0" y="27" textAnchor="middle" fill="#0d2860" fontSize="10" fontWeight="bold"
+                    fontFamily="Georgia,serif" letterSpacing="3">PARIS</text>
+                </g>
+
+                {/* ▶ STICKER 3: GREECE — 60×42, center(96,192) */}
+                <g transform="translate(96,192) rotate(-5)">
+                  <rect x="-30" y="-21" width="60" height="42" rx="7" fill="rgba(0,0,0,0.2)" transform="translate(2,3)"/>
+                  <rect x="-30" y="-21" width="60" height="42" rx="7" fill="#1652a8"/>
+                  <rect x="-30" y="-21" width="60" height="42" rx="7" fill="none" stroke="#fff" strokeWidth="3"/>
+                  <rect x="-28" y="-19" width="56" height="24" rx="3" fill="#3b7fd4" opacity="0.5"/>
+                  {/* Parthenon */}
+                  <rect x="-22" y="5"   width="44" height="5"   rx="0.6" fill="#e8e0cc"/>
+                  <rect x="-20" y="1.5" width="40" height="4"   rx="0.6" fill="#f0e8d8"/>
+                  {[-17,-11.5,-6,-0.5,5,10.5,16].map((cx,i)=>(
+                    <g key={i}>
+                      <rect x={cx-2} y="-13" width="4" height="15.5" rx="1" fill="#f5f0e8"/>
+                      <line x1={cx} y1="-13" x2={cx} y2="1.5" stroke="rgba(0,0,0,0.06)" strokeWidth="0.7"/>
+                      <rect x={cx-2.5} y="-15" width="5" height="2"  rx="0.5" fill="#e8e0cc"/>
+                    </g>
+                  ))}
+                  <rect x="-20" y="-18" width="40" height="5"   rx="0.6" fill="#e8e0cc"/>
+                  <polygon points="-19,-18 19,-18 0,-30" fill="#ddd5bf"/>
+                  <polygon points="-15,-18 15,-18 0,-27" fill="rgba(255,255,255,0.22)"/>
+                  <text x="0" y="18" textAnchor="middle" fill="#fff" fontSize="9" fontWeight="bold"
+                    fontFamily="Georgia,serif" letterSpacing="2">GREECE</text>
+                </g>
+
+                {/* ▶ STICKER 4: TOKYO — 50×50, center(215,192) */}
+                <g transform="translate(215,192) rotate(7)">
+                  <rect x="-25" y="-25" width="50" height="50" rx="7" fill="rgba(0,0,0,0.2)" transform="translate(2,3)"/>
+                  <rect x="-25" y="-25" width="50" height="50" rx="7" fill="#fce8e8"/>
+                  <rect x="-25" y="-25" width="50" height="50" rx="7" fill="none" stroke="#dc2626" strokeWidth="3"/>
+                  {/* sky */}
+                  <rect x="-23" y="-23" width="46" height="30" rx="3" fill="#fef0f0"/>
+                  {/* grass */}
+                  <rect x="-23" y="7"  width="46" height="11" fill="#86efac"/>
+                  <rect x="-23" y="11" width="46" height="7"  fill="#4ade80"/>
+                  {/* Fuji */}
+                  <polygon points="0,-22 -23,7 23,7"   fill="#cbd5e1"/>
+                  <polygon points="0,-22 -15,-3 15,-3" fill="#e2e8f0"/>
+                  <polygon points="0,-22 -8,-10 8,-10" fill="#f1f5f9"/>
+                  <polygon points="0,-22 -4,-16 4,-16" fill="#fff"/>
+                  {/* Torii */}
+                  <rect x="-16" y="-2" width="32" height="4.5" rx="1.8" fill="#dc2626"/>
+                  <rect x="-13" y="3.5" width="26" height="3"  rx="1.2" fill="#dc2626"/>
+                  <rect x="-14.5" y="-2" width="4.5" height="20" rx="1.5" fill="#dc2626"/>
+                  <rect x="10"    y="-2" width="4.5" height="20" rx="1.5" fill="#dc2626"/>
+                  <rect x="-16.5" y="16" width="8"   height="3"  rx="1"   fill="#b91c1c"/>
+                  <rect x="8.5"   y="16" width="8"   height="3"  rx="1"   fill="#b91c1c"/>
+                  <text x="0" y="23" textAnchor="middle" fill="#dc2626" fontSize="8.5" fontWeight="bold"
+                    fontFamily="Georgia,serif" letterSpacing="2">TOKYO</text>
+                </g>
+
+              </g>{/* end bagClip */}
+
             </svg>
           </div>
         </div>
@@ -1172,7 +1191,7 @@ export default function FireCompass(){
               style={{padding:"7px 11px",borderRadius:8,border:"none",whiteSpace:"nowrap",flexShrink:0,
                 background:itab===i?C.g600:"#fff",color:itab===i?"#fff":C.t2,
                 fontSize:11,fontWeight:itab===i?700:500,
-                boxShadow:itab===i?`0 3px 12px rgba(26,140,63,0.3)`:`0 1px 3px rgba(0,0,0,0.05)`}}>
+                boxShadow:itab===i?`0 1px 6px rgba(26,140,63,0.15)`:`0 1px 3px rgba(0,0,0,0.04)`}}>
               {t}
             </button>
           ))}
@@ -1689,12 +1708,12 @@ export default function FireCompass(){
             ?<button onClick={()=>setItab(t=>t+1)}
                 style={{marginLeft:"auto",padding:"11px 26px",borderRadius:10,border:"none",
                   background:`linear-gradient(135deg,${C.g700},${C.g600})`,color:"#fff",fontSize:14,
-                  fontWeight:700,cursor:"pointer",boxShadow:`0 4px 14px rgba(14,107,46,0.25)`}}>次へ →</button>
+                  fontWeight:700,cursor:"pointer",boxShadow:`0 2px 8px rgba(14,107,46,0.15)`}}>次へ →</button>
             :<button onClick={run}
                 style={{marginLeft:"auto",padding:"15px 36px",borderRadius:12,border:"none",
                   background:`linear-gradient(135deg,${C.fire} 0%,#c2410c 45%,${C.g600} 100%)`,
                   color:"#fff",fontSize:16,fontWeight:900,letterSpacing:0.5,
-                  boxShadow:`0 8px 32px rgba(232,84,10,0.45)`}}>
+                  boxShadow:`0 3px 12px rgba(232,84,10,0.22)`}}>
                 🔥 FIRE診断スタート！
               </button>
           }
@@ -1787,7 +1806,7 @@ export default function FireCompass(){
       {/* Sticky header */}
       <div className="noprint" style={{background:"linear-gradient(135deg,#14532d,#166534)",padding:"12px 18px",
         display:"flex",justifyContent:"space-between",alignItems:"center",position:"sticky",top:0,zIndex:100,
-        boxShadow:"0 2px 16px rgba(0,0,0,0.25)"}}>
+        boxShadow:"0 1px 8px rgba(0,0,0,0.12)"}}>
         <div style={{display:"flex",alignItems:"center",gap:9}}>
           <Logo s={28}/>
           <div>
@@ -1805,13 +1824,13 @@ export default function FireCompass(){
             background:"rgba(255,255,255,0.07)",color:"#bbf7d0",fontSize:11,fontWeight:600,cursor:"pointer"}}>📄 印刷/PDF</button>
           <button onClick={()=>{setPage("input");}} style={{padding:"6px 14px",borderRadius:8,border:"none",
             background:C.g500,color:"#fff",fontSize:11,fontWeight:700,cursor:"pointer",
-            boxShadow:`0 2px 8px rgba(45,145,86,0.4)`}}>← 再計算</button>
+            boxShadow:`0 1px 6px rgba(45,145,86,0.2)`}}>← 再計算</button>
         </div>
       </div>
 
       {/* Tab bar */}
       <div className="noprint" style={{background:"#fff",borderBottom:`1px solid ${C.bdr}`,display:"flex",
-        overflowX:"auto",scrollbarWidth:"none",boxShadow:"0 2px 8px rgba(0,0,0,0.04)"}}>
+        overflowX:"auto",scrollbarWidth:"none",boxShadow:"0 1px 4px rgba(0,0,0,0.05)"}}>
         {RTABS.map(t=>(
           <button key={t.id} onClick={()=>setRtab(t.id)}
             style={{padding:"12px 14px",border:"none",background:"transparent",whiteSpace:"nowrap",flexShrink:0,
@@ -1837,7 +1856,7 @@ export default function FireCompass(){
           {/* FIRE achievement banner */}
           {fireDiag.filter(f=>f.achieved).length>0&&(
             <div style={{background:"linear-gradient(135deg,#14532d,#166534)",border:`1.5px solid ${C.fire}`,
-              borderRadius:18,padding:"18px 22px",marginBottom:14,boxShadow:`0 6px 24px rgba(232,84,10,0.2)`}}>
+              borderRadius:18,padding:"18px 22px",marginBottom:14,boxShadow:"0 1px 6px rgba(0,0,0,0.07)"}}>
               <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:10}}>
                 <span style={{fontSize:30}}>🔥</span>
                 <div>
@@ -2288,7 +2307,7 @@ export default function FireCompass(){
               }}
               style={{width:"100%",padding:13,borderRadius:10,border:"none",
                 background:`linear-gradient(135deg,${C.g700},${C.g500})`,color:"#fff",
-                fontSize:14,fontWeight:700,cursor:"pointer",boxShadow:`0 4px 14px rgba(21,128,61,0.25)`,
+                fontSize:14,fontWeight:700,cursor:"pointer",boxShadow:`0 2px 8px rgba(21,128,61,0.15)`,
                 letterSpacing:0.3}}>
               🖨️ 印刷 / PDF保存
             </button>
