@@ -741,6 +741,13 @@ export default function FireCompass(){
   const [grossIncome,setGrossIncome]=useState(700);
   const [pGrossMode,setPGrossMode]=useState(false);
   const [pGross,setPGross]=useState(400);
+  const [isMobile,setIsMobile]=useState(()=>typeof window!=="undefined"&&window.innerWidth<600);
+  useEffect(()=>{
+    const fn=()=>setIsMobile(window.innerWidth<600);
+    window.addEventListener("resize",fn);
+    fn();
+    return ()=>window.removeEventListener("resize",fn);
+  },[]);
 
   const [form,setForm]=useState({
     name:"", currentAge:35, retireAge:55, lifeExpectancy:90,
@@ -894,7 +901,7 @@ export default function FireCompass(){
       `}</style>
 
       {/* ──── HERO ──── */}
-      <div style={{maxWidth:680,margin:"0 auto",padding:"20px 16px 0"}}>
+      <div style={{maxWidth:680,margin:"0 auto",padding:isMobile?"12px 10px 0":"20px 16px 0"}}>
         {/* Logo row */}
         <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:14}}>
           <div style={{display:"flex",alignItems:"center",gap:10}}>
@@ -909,10 +916,10 @@ export default function FireCompass(){
 
         {/* Hero card — Left: text panel / Right: travel illustration */}
         <div style={{borderRadius:22,marginBottom:14,overflow:"hidden",
-          boxShadow:"0 2px 16px rgba(7,60,120,0.10)",display:"flex",minHeight:230}}>
+          boxShadow:"0 2px 16px rgba(7,60,120,0.10)",display:"flex",flexDirection:isMobile?"column":"row",minHeight:isMobile?"auto":230}}>
 
           {/* ── LEFT: Text panel (solid dark background, fully readable) ── */}
-          <div style={{flex:"0 0 54%",background:"linear-gradient(160deg,#0c1445 0%,#1e3a5f 100%)",
+          <div style={{flex:isMobile?"1 1 auto":"0 0 54%",background:"linear-gradient(160deg,#0c1445 0%,#1e3a5f 100%)",
             padding:"22px 22px 20px",display:"flex",flexDirection:"column",justifyContent:"center",position:"relative",overflow:"hidden"}}>
             {/* subtle glow accent */}
             <div style={{position:"absolute",top:-40,right:-40,width:160,height:160,borderRadius:"50%",
@@ -925,10 +932,10 @@ export default function FireCompass(){
                 <span style={{fontSize:9,color:"#fff",fontWeight:700,letterSpacing:1.3}}>FIRE SIMULATOR</span>
               </div>
               {/* Headline */}
-              <h1 style={{fontFamily:SERIF,fontSize:20,color:"#f0fdf4",margin:"0 0 10px",
+              <h1 style={{fontFamily:SERIF,fontSize:isMobile?17:20,color:"#f0fdf4",margin:"0 0 10px",
                 fontWeight:800,lineHeight:1.5,letterSpacing:-0.2}}>
                 あなたの<span style={{color:"#fcd34d"}}>FIRE</span>達成まで、<br/>
-                <span style={{fontSize:17,color:"#bfdbfe"}}>あと何年・いくら必要？</span>
+                <span style={{fontSize:isMobile?14:17,color:"#bfdbfe"}}>あと何年・いくら必要？</span>
               </h1>
               {/* Feature tags */}
               <div style={{display:"flex",flexWrap:"wrap",gap:"5px 8px",marginBottom:12}}>
@@ -952,7 +959,7 @@ export default function FireCompass(){
           </div>
 
           {/* ── RIGHT: big suitcase centred, stickers inside ── */}
-          <div style={{flex:"0 0 46%",position:"relative",overflow:"hidden"}}>
+          <div style={{flex:isMobile?"0 0 auto":"0 0 46%",height:isMobile?180:"auto",position:"relative",overflow:"hidden"}}>
             <svg width="100%" height="100%" viewBox="0 0 320 240" preserveAspectRatio="xMidYMid slice"
               style={{display:"block",width:"100%",height:"100%"}}>
               <defs>
@@ -1183,7 +1190,7 @@ export default function FireCompass(){
       </div>
 
       {/* ──── TABS + FORM ──── */}
-      <div style={{maxWidth:680,margin:"0 auto",padding:"0 16px"}}>
+      <div style={{maxWidth:680,margin:"0 auto",padding:isMobile?"0 10px":"0 16px"}}>
         {/* Tab bar */}
         <div style={{display:"flex",gap:3,marginBottom:12,overflowX:"auto",paddingBottom:2,scrollbarWidth:"none"}}>
           {ITABS.map((t,i)=>(
@@ -1207,7 +1214,7 @@ export default function FireCompass(){
                 style={{width:"100%",padding:"9px 12px",borderRadius:9,border:`1.5px solid ${C.bdr}`,
                   background:"#fff",color:C.t1,fontSize:14,outline:"none",boxSizing:"border-box",fontFamily:FONT}}/>
             </div>
-            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:10,marginBottom:14}}>
+            <div style={{display:"grid",gridTemplateColumns:isMobile?"1fr 1fr":isMobile?"1fr 1fr":"1fr 1fr 1fr",gap:10,marginBottom:14}}>
               {[["現在の年齢","currentAge","歳",18,80],["リタイア希望","retireAge","歳",30,90],["想定寿命","lifeExpectancy","歳",60,110]].map(([l,k,u,mn,mx])=>(
                 <div key={k}><Lbl>{l}</Lbl><Num value={form[k]} onChange={v=>setF(k,v)} unit={u} min={mn} max={mx}/></div>
               ))}
@@ -1387,7 +1394,7 @@ export default function FireCompass(){
                 </label>
               ))}
             </div>
-            <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:10,marginBottom:12}}>
+            <div style={{display:"grid",gridTemplateColumns:isMobile?"1fr 1fr":"repeat(3,1fr)",gap:10,marginBottom:12}}>
               <div><Lbl>受給開始年齢</Lbl><Num value={form.pensionStartAge} onChange={v=>setF("pensionStartAge",v)} unit="歳" min={60} max={75}/></div>
               {form.pensionType==="kosei"&&<>
                 <div><Lbl>厚生年金加入年数</Lbl><Num value={form.kosei_years} onChange={v=>setF("kosei_years",v)} unit="年" min={0} max={50}/></div>
@@ -1418,7 +1425,7 @@ export default function FireCompass(){
                   <div style={{fontSize:10,color:C.t3,marginTop:1}}>掛金が全額所得控除。退職時に退職所得扱いで受取。</div>
                 </div>
               </label>
-              {form.ideco_active&&<div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:10}}>
+              {form.ideco_active&&<div style={{display:"grid",gridTemplateColumns:isMobile?"1fr":"1fr 1fr 1fr",gap:10}}>
                 <div><Lbl>月額掛金</Lbl><Num value={form.ideco_monthly} onChange={v=>setF("ideco_monthly",v)} unit="万円" min={0.1} max={6.8} step={0.1}/></div>
                 <div><Lbl>想定年率</Lbl><Num value={form.ideco_rate} onChange={v=>setF("ideco_rate",v)} unit="%" min={0} max={15} step={0.5}/></div>
                 <div style={{display:"flex",alignItems:"flex-end",paddingBottom:2}}>
@@ -1472,7 +1479,7 @@ export default function FireCompass(){
           {/* ── TAB 6: 子供 ── */}
           {itab===6&&<>
             <SectionHead icon={<span style={{fontSize:20}}>👶</span>} title="子供の教育費" sub="幼稚園〜大学まで公立/私立を選択して自動計算"/>
-            <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:6,marginBottom:12}}>
+            <div style={{display:"grid",gridTemplateColumns:isMobile?"1fr 1fr":"repeat(3,1fr)",gap:6,marginBottom:12}}>
               {[["幼稚園","公70/私158万"],["小学校","公211/私1,000万"],["中学校","公162/私430万"],
                 ["高 校","公154/私315万"],["大(文系)","国243/私430万"],["大(医)","私立3,000万"]].map(([s,v])=>(
                 <div key={s} style={{background:C.g100,borderRadius:8,padding:"7px 9px"}}>
@@ -1499,7 +1506,7 @@ export default function FireCompass(){
                     <Num value={c.birthYear||curYear} onChange={v=>{const arr=[...form.children];arr[i]={...c,birthYear:Math.round(v)};setF("children",arr);}} unit="年" min={1990} max={2045} step={1}/>
                   </div>
                 </div>
-                <div style={{display:"grid",gridTemplateColumns:"repeat(5,1fr)",gap:5,marginBottom:10}}>
+                <div style={{display:"grid",gridTemplateColumns:isMobile?"1fr 1fr 1fr":"repeat(5,1fr)",gap:5,marginBottom:10}}>
                   {[["幼","kg",[["pub","公"],["pri","私"]]],["小","el",[["pub","公"],["pri","私"]]],
                     ["中","jh",[["pub","公"],["pri","私"]]],["高","hs",[["pub","公"],["pri","私"]]],
                     ["大","univ",[["pub","国"],["pri","私文"],["sci","私理"],["med","医"]]]
@@ -1547,7 +1554,7 @@ export default function FireCompass(){
                 <span style={{fontSize:13,fontWeight:600,color:C.t1}}>生前贈与プランを有効にする</span>
               </label>
               {form.giftActive&&<div style={{background:C.muted,borderRadius:11,padding:14,marginBottom:10}}>
-                <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:10,marginBottom:8}}>
+                <div style={{display:"grid",gridTemplateColumns:isMobile?"1fr 1fr":"1fr 1fr 1fr",gap:10,marginBottom:8}}>
                   <div><Lbl tip="年110万円以下が非課税">1人あたり年間贈与額</Lbl><Num value={form.giftAmount} onChange={v=>setF("giftAmount",v)} unit="万円" step={10}/></div>
                   <div><Lbl>贈与する人数</Lbl><Num value={form.giftPeople} onChange={v=>setF("giftPeople",v)} unit="人" min={1} max={10}/></div>
                   <div><Lbl>贈与期間</Lbl><Num value={form.giftYears} onChange={v=>setF("giftYears",v)} unit="年" min={1} max={30}/></div>
@@ -1710,9 +1717,9 @@ export default function FireCompass(){
                   background:`linear-gradient(135deg,${C.g700},${C.g600})`,color:"#fff",fontSize:14,
                   fontWeight:700,cursor:"pointer",boxShadow:`0 2px 8px rgba(14,107,46,0.15)`}}>次へ →</button>
             :<button onClick={run}
-                style={{marginLeft:"auto",padding:"15px 36px",borderRadius:12,border:"none",
+                style={{marginLeft:isMobile?0:"auto",width:isMobile?"100%":"auto",padding:"15px 36px",borderRadius:12,border:"none",
                   background:`linear-gradient(135deg,${C.fire} 0%,#c2410c 45%,${C.g600} 100%)`,
-                  color:"#fff",fontSize:16,fontWeight:900,letterSpacing:0.5,
+                  color:"#fff",fontSize:isMobile?15:16,fontWeight:900,letterSpacing:0.5,
                   boxShadow:`0 3px 12px rgba(232,84,10,0.22)`}}>
                 🔥 FIRE診断スタート！
               </button>
@@ -1924,7 +1931,7 @@ export default function FireCompass(){
           <Card style={{marginBottom:14}}>
             <div style={{fontSize:15,fontWeight:800,color:C.t1,marginBottom:4}}>3つのシナリオ比較（{form.lifeExpectancy}歳時点の資産残高）</div>
             <div style={{fontSize:11,color:C.t3,marginBottom:14}}>年{form.annualWithdraw}万円取り崩し ＋ 年金{Math.round(rTotPens/MAN)}万円/年</div>
-            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:10,marginBottom:18}}>
+            <div style={{display:"grid",gridTemplateColumns:isMobile?"1fr":"1fr 1fr 1fr",gap:10,marginBottom:18}}>
               {[
                 {label:"最良のケース",sub:"上位10%シナリオ",val:bestFinal,color:C.ok,icon:"🌟"},
                 {label:"中央値",sub:"500通りの中央",val:medianFinal,color:C.g700,icon:"📊"},
@@ -2221,7 +2228,7 @@ export default function FireCompass(){
           <Card style={{marginBottom:14}}>
             <div style={{fontSize:15,fontWeight:800,color:C.t1,marginBottom:4}}>🏛 相続税シミュレーション</div>
             <div style={{fontSize:11,color:C.t3,marginBottom:14}}>法定相続人2人（子2人）想定 ／ 基礎控除: 3,000万 + 600万×2 = 4,200万円</div>
-            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:10,marginBottom:14}}>
+            <div style={{display:"grid",gridTemplateColumns:isMobile?"1fr 1fr":isMobile?"1fr 1fr":"1fr 1fr 1fr",gap:10,marginBottom:14}}>
               {[{l:`${form.lifeExpectancy}歳時 金融資産（推定）`,v:fmtM(estateAtDeath),c:C.g700},
                 {l:"不動産純資産",v:form.hasHome?fmtM(netHome):"なし",c:C.g600},
                 form.inheritReceiveActive&&inheritReceived>0?{l:"親の遺産受取（込み）",v:"+"+fmtM(inheritReceived),c:C.gold}:null,
