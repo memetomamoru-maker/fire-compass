@@ -1298,14 +1298,10 @@ export default function FireCompass(){
             {/* FIRE種別カード */}
             <div style={{display:"grid",gridTemplateColumns:isMobile?"1fr 1fr":"repeat(4,1fr)",gap:8}}>
               {[
-                {icon:"🧘",name:"リーンFIRE",color:"#0891b2",bg:"#f0f9ff",desc:"節約重視
-年200〜300万で生活"},
-                {icon:"💼",name:"サイドFIRE",color:"#7c3aed",bg:"#f5f3ff",desc:"副業・趣味収入
-セミリタイア"},
-                {icon:"🔥",name:"FIRE",color:C.g700,bg:C.g100,desc:"年間支出×25倍
-完全リタイア"},
-                {icon:"👑",name:"FATFIRE",color:"#b45309",bg:"#fffbeb",desc:"豊かな生活水準
-維持したままFIRE"},
+                {icon:"🧘",name:"リーンFIRE",color:"#0891b2",bg:"#f0f9ff",desc:"節約重視・年200〜300万で生活"},
+                {icon:"💼",name:"サイドFIRE",color:"#7c3aed",bg:"#f5f3ff",desc:"副業・趣味収入でセミリタイア"},
+                {icon:"🔥",name:"FIRE",color:C.g700,bg:C.g100,desc:"年間支出×25倍で完全リタイア"},
+                {icon:"👑",name:"FATFIRE",color:"#b45309",bg:"#fffbeb",desc:"豊かな生活水準を維持したままFIRE"},
               ].map(f=>(
                 <div key={f.name} style={{background:f.bg,borderRadius:10,padding:"10px 10px 12px",
                   border:`1px solid ${f.color}22`,textAlign:"center"}}>
