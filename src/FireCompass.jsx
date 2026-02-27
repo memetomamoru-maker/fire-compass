@@ -671,7 +671,7 @@ function ShareCard({form,results,blended,isMobile}){
       if(!window.html2canvas){
         await new Promise((res,rej)=>{const s=document.createElement("script");s.src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js";s.onload=res;s.onerror=rej;document.head.appendChild(s);});
       }
-      const canvas=await window.html2canvas(ref.current,{scale:2,backgroundColor:"#14532d",useCORS:true});
+      const canvas=await window.html2canvas(ref.current,{scale:2,backgroundColor:"#fef9c3",useCORS:true});
       canvas.toBlob(blob=>{const url=URL.createObjectURL(blob);const a=document.createElement("a");a.href=url;a.download=`fire-compass-${form.name||"share"}.png`;a.click();URL.revokeObjectURL(url);},"image/png");
     }catch{alert("画像の保存に失敗しました。スクリーンショットをご利用ください。");}
     finally{setSaving(false);}
@@ -689,69 +689,69 @@ function ShareCard({form,results,blended,isMobile}){
 
   return(
     <div>
-      <div ref={ref} style={{background:"linear-gradient(135deg,#14532d 0%,#166534 100%)",
+      <div ref={ref} style={{background:"linear-gradient(145deg,#fefce8 0%,#fef9c3 50%,#fde68a 100%)",
         borderRadius:20,padding:28,fontFamily:FONT,maxWidth:480,
-        boxShadow:"0 4px 24px rgba(0,0,0,0.14)",position:"relative",overflow:"hidden"}}>
-        {/* 背景デコ */}
-        <div style={{position:"absolute",top:-60,right:-60,width:240,height:240,borderRadius:"50%",
-          background:"radial-gradient(circle,rgba(234,88,12,0.18) 0%,transparent 70%)",pointerEvents:"none"}}/>
-        <div style={{position:"absolute",bottom:-40,left:-40,width:180,height:180,borderRadius:"50%",
-          background:"radial-gradient(circle,rgba(34,197,94,0.12) 0%,transparent 70%)",pointerEvents:"none"}}/>
+        boxShadow:"0 4px 24px rgba(180,83,9,0.12)",position:"relative",overflow:"hidden",
+        border:"1.5px solid #fcd34d"}}>
+        {/* 背景デコ - アンバー系 */}
+        <div style={{position:"absolute",top:-50,right:-50,width:200,height:200,borderRadius:"50%",
+          background:"radial-gradient(circle,rgba(245,158,11,0.15) 0%,transparent 70%)",pointerEvents:"none"}}/>
+        <div style={{position:"absolute",bottom:-30,left:-30,width:160,height:160,borderRadius:"50%",
+          background:"radial-gradient(circle,rgba(180,83,9,0.08) 0%,transparent 70%)",pointerEvents:"none"}}/>
         <div style={{position:"relative"}}>
           {/* ヘッダー */}
-          <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:20}}>
+          <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:18}}>
             <div style={{display:"flex",alignItems:"center",gap:10}}>
               <Logo s={34}/>
               <div>
-                <div style={{fontSize:13,fontWeight:900,color:"#f1f5f9",letterSpacing:2.5,fontFamily:SERIF}}>FIRE COMPASS</div>
-                <div style={{fontSize:9,color:"#94a3b8",letterSpacing:1.5}}>経済的自由への羅針盤</div>
+                <div style={{fontSize:13,fontWeight:900,color:C.deep,letterSpacing:2.5,fontFamily:SERIF}}>FIRE COMPASS</div>
+                <div style={{fontSize:9,color:C.t3,letterSpacing:1.5}}>経済的自由への羅針盤</div>
               </div>
             </div>
-            <div style={{background:"rgba(234,88,12,0.2)",border:"1px solid rgba(234,88,12,0.4)",
+            <div style={{background:C.g100,border:`1px solid ${C.g300}`,
               borderRadius:99,padding:"4px 12px"}}>
-              <span style={{fontSize:11,color:"#fb923c",fontWeight:700}}>{form.currentAge}歳</span>
+              <span style={{fontSize:11,color:C.g700,fontWeight:700}}>{form.currentAge}歳</span>
             </div>
           </div>
           {/* 名前 */}
-          <div style={{marginBottom:18}}>
-            <div style={{fontSize:22,fontWeight:700,color:"#f8fafc",fontFamily:SERIF,lineHeight:1.3}}>
+          <div style={{marginBottom:16}}>
+            <div style={{fontSize:22,fontWeight:700,color:C.deep,fontFamily:SERIF,lineHeight:1.3}}>
               {form.name?`${form.name} さんの`:""}
-              <span style={{color:"#fbbf24"}}> FIRE </span>レポート
+              <span style={{color:C.g600}}> FIRE </span>レポート
             </div>
-            <div style={{fontSize:11,color:"#94a3b8",marginTop:4}}>{blended.rate}% 期待リターン想定 ／ モンテカルロ{TRIALS}回</div>
+            <div style={{fontSize:11,color:C.t3,marginTop:4}}>{blended.rate}% 期待リターン想定 ／ モンテカルロ{TRIALS}回</div>
           </div>
           {/* KPIグリッド */}
           <div style={{display:"grid",gridTemplateColumns:isMobile?"1fr":"1fr 1fr",gap:10,marginBottom:16}}>
-            {[{label:"金融資産",val:fmtM(form.currentAsset),icon:"💳",accent:"#4ade80"},
-              {label:"退職時資産（中央値）",val:fmt(results.retireA),icon:"🎯",accent:"#60a5fa"},
-              {label:"老後資産生存率",val:postSurv+"%",icon:"📊",accent:postSurv>=80?"#4ade80":postSurv>=50?"#fbbf24":"#f87171"},
-              {label:"資産ランク",val:getTier(form.currentAsset).label,icon:"🏆",accent:"#fbbf24"},
+            {[{label:"金融資産",val:fmtM(form.currentAsset),icon:"💳",accent:C.g700},
+              {label:"退職時資産（中央値）",val:fmt(results.retireA),icon:"🎯",accent:C.deep},
+              {label:"老後資産生存率",val:postSurv+"%",icon:"📊",accent:postSurv>=80?C.g700:postSurv>=50?"#d97706":"#dc2626"},
+              {label:"資産ランク",val:getTier(form.currentAsset).label,icon:"🏆",accent:C.g600},
             ].map(c=>(
-              <div key={c.label} style={{background:"rgba(255,255,255,0.06)",borderRadius:12,
-                padding:"13px 14px",border:`1px solid rgba(255,255,255,0.08)`,
-                backdropFilter:"blur(4px)"}}>
-                <div style={{fontSize:9,color:"#94a3b8",marginBottom:6,letterSpacing:0.5}}>{c.icon} {c.label}</div>
+              <div key={c.label} style={{background:"rgba(255,255,255,0.7)",borderRadius:12,
+                padding:"13px 14px",border:`1px solid ${C.g200}`,backdropFilter:"blur(4px)"}}>
+                <div style={{fontSize:9,color:C.t3,marginBottom:6,letterSpacing:0.5}}>{c.icon} {c.label}</div>
                 <div style={{fontSize:18,fontWeight:800,color:c.accent,fontFamily:SERIF}}>{c.val}</div>
               </div>
             ))}
           </div>
           {/* FIRE達成バッジ */}
-          {fireDone.length>0&&<div style={{background:"rgba(234,88,12,0.12)",borderRadius:12,
-            padding:"10px 14px",border:"1px solid rgba(234,88,12,0.3)",marginBottom:12}}>
-            <div style={{fontSize:9,color:"#fb923c",marginBottom:7,fontWeight:700,letterSpacing:1}}>🔥 達成済みFIREステータス</div>
+          {fireDone.length>0&&<div style={{background:"rgba(255,255,255,0.6)",borderRadius:12,
+            padding:"10px 14px",border:`1px solid ${C.g300}`,marginBottom:12}}>
+            <div style={{fontSize:9,color:C.g700,marginBottom:7,fontWeight:700,letterSpacing:1}}>🔥 達成済みFIREステータス</div>
             <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
               {fireDone.map(f=>(
-                <span key={f.key} style={{background:"rgba(251,146,60,0.15)",color:"#fb923c",
+                <span key={f.key} style={{background:C.g100,color:C.g700,
                   fontSize:11,fontWeight:700,padding:"3px 10px",borderRadius:99,
-                  border:"1px solid rgba(251,146,60,0.3)"}}>✓ {f.label}</span>
+                  border:`1px solid ${C.g300}`}}>✓ {f.label}</span>
               ))}
             </div>
           </div>}
           {/* フッター */}
           <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",
-            borderTop:"1px solid rgba(255,255,255,0.08)",paddingTop:12,marginTop:4}}>
-            <div style={{fontSize:9,color:"#475569"}}>fire-compass.app</div>
-            <div style={{fontSize:9,color:"#475569"}}>完全無料 • データ送信なし</div>
+            borderTop:`1px solid ${C.g200}`,paddingTop:12,marginTop:4}}>
+            <div style={{fontSize:9,color:C.t3}}>fire-compass.app</div>
+            <div style={{fontSize:9,color:C.t3}}>完全無料 • データ送信なし</div>
           </div>
         </div>
       </div>
@@ -1266,6 +1266,109 @@ export default function FireCompass(){
       </div>
 
       {/* ──── TABS + FORM ──── */}
+      {/* ── FIRE説明 & 使い方 ── */}
+      <div style={{maxWidth:760,margin:"16px auto 0",padding:isMobile?"0 12px":"0 20px",boxSizing:"border-box",width:"100%"}}>
+
+        {/* FIREとは？ */}
+        <div style={{borderRadius:18,overflow:"hidden",marginBottom:14,
+          boxShadow:"0 2px 16px rgba(14,107,46,0.07), 0 1px 4px rgba(0,0,0,0.04)"}}>
+          {/* ヘッダー帯 */}
+          <div style={{background:`linear-gradient(135deg,${C.g700} 0%,${C.g600} 100%)`,
+            padding:isMobile?"14px 16px":"16px 22px",display:"flex",alignItems:"center",gap:10}}>
+            <span style={{fontSize:22}}>🔥</span>
+            <div>
+              <div style={{fontSize:isMobile?14:15,fontWeight:800,color:"#fff",letterSpacing:0.3}}>FIREとは？</div>
+              <div style={{fontSize:10,color:"rgba(255,255,255,0.75)",marginTop:1}}>Financial Independence, Retire Early</div>
+            </div>
+          </div>
+          {/* 本文 */}
+          <div style={{background:"#fff",padding:isMobile?"14px 16px":"18px 22px"}}>
+            <p style={{fontSize:isMobile?12:13,color:C.t2,lineHeight:2,margin:"0 0 14px"}}>
+              <b style={{color:C.t1}}>FIRE</b>とは「経済的自立（Financial Independence）」と「早期退職（Retire Early）」の頭文字をとった言葉です。
+              給与収入に頼らず、<b style={{color:C.g700}}>資産運用の利益だけで生活できる状態</b>を目指すライフスタイルです。
+            </p>
+            <div style={{background:C.g100,borderRadius:12,padding:isMobile?"12px 14px":"14px 18px",marginBottom:14,borderLeft:`3px solid ${C.g500}`}}>
+              <div style={{fontSize:isMobile?11:12,color:C.g800,lineHeight:1.9}}>
+                <b>📐 FIRE達成の目安</b>　年間生活費の25倍の資産を築く
+                <div style={{fontSize:10,color:C.t3,marginTop:4}}>
+                  ※「年利4%で運用し毎年4%を取り崩せば資産が尽きない」という研究（トリニティスタディ）に基づく目安です。
+                </div>
+              </div>
+            </div>
+            {/* FIRE種別カード */}
+            <div style={{display:"grid",gridTemplateColumns:isMobile?"1fr 1fr":"repeat(4,1fr)",gap:8}}>
+              {[
+                {icon:"🧘",name:"リーンFIRE",color:"#0891b2",bg:"#f0f9ff",desc:"節約重視
+年200〜300万で生活"},
+                {icon:"💼",name:"サイドFIRE",color:"#7c3aed",bg:"#f5f3ff",desc:"副業・趣味収入
+セミリタイア"},
+                {icon:"🔥",name:"FIRE",color:C.g700,bg:C.g100,desc:"年間支出×25倍
+完全リタイア"},
+                {icon:"👑",name:"FATFIRE",color:"#b45309",bg:"#fffbeb",desc:"豊かな生活水準
+維持したままFIRE"},
+              ].map(f=>(
+                <div key={f.name} style={{background:f.bg,borderRadius:10,padding:"10px 10px 12px",
+                  border:`1px solid ${f.color}22`,textAlign:"center"}}>
+                  <div style={{fontSize:20,marginBottom:4}}>{f.icon}</div>
+                  <div style={{fontSize:isMobile?10:11,fontWeight:800,color:f.color,marginBottom:4}}>{f.name}</div>
+                  <div style={{fontSize:9,color:C.t3,lineHeight:1.6,whiteSpace:"pre-line"}}>{f.desc}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* 使い方 */}
+        <div style={{borderRadius:18,overflow:"hidden",marginBottom:16,
+          boxShadow:"0 2px 16px rgba(14,107,46,0.07), 0 1px 4px rgba(0,0,0,0.04)"}}>
+          {/* ヘッダー帯 */}
+          <div style={{background:"linear-gradient(135deg,#1e293b 0%,#334155 100%)",
+            padding:isMobile?"14px 16px":"16px 22px",display:"flex",alignItems:"center",gap:10}}>
+            <span style={{fontSize:22}}>📖</span>
+            <div>
+              <div style={{fontSize:isMobile?14:15,fontWeight:800,color:"#fff",letterSpacing:0.3}}>このシミュレーターの使い方</div>
+              <div style={{fontSize:10,color:"rgba(255,255,255,0.65)",marginTop:1}}>入力から診断まで5ステップ</div>
+            </div>
+          </div>
+          {/* ステップ */}
+          <div style={{background:"#fff",padding:isMobile?"14px 16px":"18px 22px"}}>
+            <div style={{display:"flex",flexDirection:"column",gap:0}}>
+              {[
+                {n:"1",icon:"👤",title:"基本情報を入力",desc:"現在の年齢・リタイア希望年齢・想定寿命を設定します",color:C.g600},
+                {n:"2",icon:"💳",title:"資産・収支を入力",desc:"金融資産・年収・月々の投資額・生活費を入力します",color:"#0891b2"},
+                {n:"3",icon:"📊",title:"ファンドを選択",desc:"投資するインデックスファンドを選びます（デフォルトのままでもOK）",color:"#7c3aed"},
+                {n:"4",icon:"🏦",title:"年金・税・教育費を設定",desc:"年金受給年齢・子供の教育費・インフレ率などを細かく設定できます",color:"#b45309"},
+                {n:"5",icon:"🔥",title:"FIRE診断スタート！",desc:"モンテカルロ法で1000通りの未来をシミュレーション。FIRE達成確率を算出します",color:C.fire},
+              ].map((s,i,arr)=>(
+                <div key={s.n} style={{display:"flex",gap:isMobile?10:14,alignItems:"stretch",
+                  paddingBottom:i<arr.length-1?14:0, marginBottom:i<arr.length-1?0:0}}>
+                  {/* ライン */}
+                  <div style={{display:"flex",flexDirection:"column",alignItems:"center",flexShrink:0}}>
+                    <div style={{width:34,height:34,borderRadius:"50%",
+                      background:`linear-gradient(135deg,${s.color},${s.color}cc)`,
+                      color:"#fff",fontSize:13,fontWeight:800,
+                      display:"flex",alignItems:"center",justifyContent:"center",
+                      boxShadow:`0 2px 8px ${s.color}44`,flexShrink:0}}>{s.icon}</div>
+                    {i<arr.length-1&&<div style={{width:2,flex:1,background:`linear-gradient(${s.color}44,${arr[i+1].color}44)`,
+                      marginTop:4,marginBottom:0,borderRadius:1}}/>}
+                  </div>
+                  {/* テキスト */}
+                  <div style={{paddingTop:4,paddingBottom:i<arr.length-1?10:0}}>
+                    <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:3}}>
+                      <span style={{fontSize:9,fontWeight:700,color:"#fff",background:s.color,
+                        borderRadius:4,padding:"1px 6px"}}>STEP {s.n}</span>
+                      <span style={{fontSize:isMobile?12:13,fontWeight:700,color:C.t1}}>{s.title}</span>
+                    </div>
+                    <div style={{fontSize:isMobile?11:12,color:C.t3,lineHeight:1.7}}>{s.desc}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+      </div>
+
       <div style={{maxWidth:760,margin:"0 auto",padding:isMobile?"0 10px":"0 20px",boxSizing:"border-box",width:"100%"}}>
         {/* Tab bar */}
         <div style={{display:"flex",gap:3,marginBottom:12,overflowX:"auto",paddingBottom:2,scrollbarWidth:"none",WebkitOverflowScrolling:"touch",msOverflowStyle:"none"}}>
@@ -1910,6 +2013,36 @@ export default function FireCompass(){
 
   return(
     <div id="report-root" style={{fontFamily:FONT,background:C.bg,minHeight:"100vh"}}>
+      {/* 印刷/PDFモーダル */}
+      {showPrintModal&&<div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.5)",zIndex:1000,display:"flex",alignItems:"center",justifyContent:"center",padding:16}}
+        onClick={()=>setShowPrintModal(false)}>
+        <div style={{background:"#fff",borderRadius:16,padding:24,maxWidth:360,width:"100%",boxShadow:"0 8px 32px rgba(0,0,0,0.2)"}}
+          onClick={e=>e.stopPropagation()}>
+          <div style={{fontSize:16,fontWeight:800,color:C.t1,marginBottom:16}}>📄 PDF・印刷で保存</div>
+          <div style={{fontSize:13,color:C.t2,lineHeight:1.9,marginBottom:20}}>
+            <div style={{background:C.g100,borderRadius:10,padding:"10px 14px",marginBottom:10}}>
+              <div style={{fontWeight:700,color:C.g700,marginBottom:4}}>💻 PC / Mac</div>
+              <div>① 下のボタンを押す</div>
+              <div>② 印刷ダイアログで「送信先」→「<b>PDFに保存</b>」を選択</div>
+            </div>
+            <div style={{background:"#f0f9ff",borderRadius:10,padding:"10px 14px"}}>
+              <div style={{fontWeight:700,color:"#0369a1",marginBottom:4}}>📱 スマートフォン</div>
+              <div>① ブラウザ右上のメニュー（⋮ or □↑）をタップ</div>
+              <div>② 「<b>共有</b>」または「<b>印刷</b>」を選択</div>
+              <div>③「<b>PDFとして保存</b>」を選択</div>
+            </div>
+          </div>
+          <div style={{display:"flex",gap:10}}>
+            <button onClick={()=>{setShowPrintModal(false);setTimeout(()=>window.print(),100);}}
+              style={{flex:1,padding:"11px 0",borderRadius:10,border:"none",
+                background:`linear-gradient(135deg,${C.g700},${C.g600})`,
+                color:"#fff",fontSize:14,fontWeight:700,cursor:"pointer"}}>🖨️ 印刷を開く</button>
+            <button onClick={()=>setShowPrintModal(false)}
+              style={{padding:"11px 16px",borderRadius:10,border:`1px solid ${C.bdr}`,
+                background:"#fff",color:C.t2,fontSize:13,cursor:"pointer"}}>閉じる</button>
+          </div>
+        </div>
+      </div>}
       <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;600;700;900&family=Shippori+Mincho:wght@500;700&display=swap" rel="stylesheet"/>
       <style>{`
         *{font-family:'Noto Sans JP','Hiragino Kaku Gothic Pro',sans-serif;box-sizing:border-box;-webkit-font-smoothing:antialiased;}
