@@ -959,7 +959,7 @@ export default function FireCompass(){
           </div>
 
           {/* ── RIGHT: big suitcase centred, stickers inside ── */}
-          <div style={{flex:isMobile?"0 0 auto":"0 0 46%",height:isMobile?180:"auto",position:"relative",overflow:"hidden"}}>
+          <div style={{flex:isMobile?"0 0 auto":"0 0 46%",height:isMobile?260:"auto",position:"relative",overflow:"hidden"}}>
             <svg width="100%" height="100%" viewBox="0 0 320 240" preserveAspectRatio="xMidYMid slice"
               style={{display:"block",width:"100%",height:"100%"}}>
               <defs>
