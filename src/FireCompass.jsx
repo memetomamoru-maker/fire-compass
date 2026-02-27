@@ -189,18 +189,50 @@ function calcPartnerPens(f){
 }
 
 // 教育費
-const EDU = {kg:{pub:70,pri:158},el:{pub:211,pri:1000},jh:{pub:162,pri:430},hs:{pub:154,pri:315},
-  univ_pub:243,univ_pri:430,univ_sci:550,univ_med:3000};
+const EDU = {
+  kg:{pub:70,pri:158},
+  el:{pub:211,pri:1000},
+  jh:{pub:162,pri:430},
+  hs:{pub:154,pri:315,none:0},         // none=高校行かない
+  univ_pub:243,                          // 国立文系・理系（4年）
+  univ_pri:430,                          // 私立文系（4年）
+  univ_sci:550,                          // 私立理系（4年）
+  univ_med_nat:350,                      // 国立医学部（6年）
+  univ_med:3000,                         // 私立医学部（6年）
+  univ_pharm:800,                        // 私立薬学部（6年）
+  univ_art:600,                          // 私立芸術系（4年）
+  univ_sen:170,                          // 専門学校（2年）
+  univ_none:0,                           // 大学行かない
+};
 const PHASES=[{key:"kg",s:3,l:3},{key:"el",s:6,l:6},{key:"jh",s:12,l:3},{key:"hs",s:15,l:3},{key:"univ",s:18,l:4}];
-function univCost(u){ return u==="med"?EDU.univ_med:u==="sci"?EDU.univ_sci:u==="pri"?EDU.univ_pri:EDU.univ_pub; }
-function childTotal(lv){ return (lv.kg==="pri"?EDU.kg.pri:EDU.kg.pub)+(lv.el==="pri"?EDU.el.pri:EDU.el.pub)+(lv.jh==="pri"?EDU.jh.pri:EDU.jh.pub)+(lv.hs==="pri"?EDU.hs.pri:EDU.hs.pub)+univCost(lv.univ); }
+function univCost(u){
+  if(u==="med")     return EDU.univ_med;
+  if(u==="med_nat") return EDU.univ_med_nat;
+  if(u==="sci")     return EDU.univ_sci;
+  if(u==="pri")     return EDU.univ_pri;
+  if(u==="pharm")   return EDU.univ_pharm;
+  if(u==="art")     return EDU.univ_art;
+  if(u==="sen")     return EDU.univ_sen;
+  if(u==="none")    return EDU.univ_none;
+  return EDU.univ_pub;
+}
+function childTotal(lv){
+  const hsCost = lv.hs==="none"?0:(lv.hs==="pri"?EDU.hs.pri:EDU.hs.pub);
+  return (lv.kg==="pri"?EDU.kg.pri:EDU.kg.pub)
+       + (lv.el==="pri"?EDU.el.pri:EDU.el.pub)
+       + (lv.jh==="pri"?EDU.jh.pri:EDU.jh.pub)
+       + hsCost + univCost(lv.univ);
+}
 function buildChildMap(children, curY){
   const m={};
   children.forEach(c=>{
     const lv = c.levels || {kg:"pub",el:"pub",jh:"pub",hs:"pub",univ:"pub"};
     const by = Math.round(c.birthYear) || curY;
     PHASES.forEach(ph=>{
-      const cost=ph.key==="univ"?univCost(lv.univ):EDU[ph.key][lv[ph.key]==="pri"?"pri":"pub"];
+      let cost;
+      if(ph.key==="hs")   cost = lv.hs==="none"?0:(lv.hs==="pri"?EDU.hs.pri:EDU.hs.pub);
+      else if(ph.key==="univ") cost = univCost(lv.univ);
+      else cost = EDU[ph.key][lv[ph.key]==="pri"?"pri":"pub"];
       const py=Math.round(cost/ph.l);
       for(let i=0;i<ph.l;i++){const y=by+ph.s+i-curY; if(y>=0)m[y]=(m[y]||0)+py;}
     });
@@ -768,7 +800,7 @@ export default function FireCompass(){
   const [rtab,setRtab]=useState("overview");
   const [results,setResults]=useState(null);
   const [grossMode,setGrossMode]=useState(false);
-  const [grossIncome,setGrossIncome]=useState(700);
+  const [grossIncome,setGrossIncome]=useState(800);
   const [pGrossMode,setPGrossMode]=useState(false);
   const [pGross,setPGross]=useState(400);
   const [isMobile,setIsMobile]=useState(()=>typeof window!=="undefined"&&window.innerWidth<600);
@@ -817,7 +849,20 @@ export default function FireCompass(){
   });
   const setF=useCallback((k,v)=>setForm(f=>({...f,[k]:v})),[]);
 
-  useEffect(()=>{ if(grossMode) setF("annualIncome",grossToNet(grossIncome)); },[grossMode,grossIncome]);
+  useEffect(()=>{
+    if(grossMode) setF("annualIncome",grossToNet(grossIncome));
+  },[grossMode,grossIncome]);
+  // grossModeをONにした瞬間、現在の手取りから額面を逆算してセット
+  const prevGrossMode = useRef(false);
+  useEffect(()=>{
+    if(grossMode && !prevGrossMode.current){
+      // 手取りから額面を逆算（二分探索）
+      let lo=form.annualIncome, hi=form.annualIncome*2;
+      for(let i=0;i<30;i++){ const mid=(lo+hi)/2; grossToNet(mid)>form.annualIncome?hi=mid:lo=mid; }
+      setGrossIncome(Math.round((lo+hi)/2/10)*10);
+    }
+    prevGrossMode.current=grossMode;
+  },[grossMode]);
   useEffect(()=>{ if(pGrossMode) setF("p_income",grossToNet(pGross)); },[pGrossMode,pGross]);
   useEffect(()=>{
     if(form.p_isHousewife){
@@ -1541,7 +1586,8 @@ export default function FireCompass(){
             <SectionHead icon={<span style={{fontSize:20}}>👶</span>} title="子供の教育費" sub="幼稚園〜大学まで公立/私立を選択して自動計算"/>
             <div style={{display:"grid",gridTemplateColumns:isMobile?"1fr 1fr":"repeat(3,1fr)",gap:6,marginBottom:12}}>
               {[["幼稚園","公70/私158万"],["小学校","公211/私1,000万"],["中学校","公162/私430万"],
-                ["高 校","公154/私315万"],["大(文系)","国243/私430万"],["大(医)","私立3,000万"]].map(([s,v])=>(
+                ["高 校","公154/私315万"],["大(国立)","243万"],["大(私文)","430万"],
+                ["大(私理)","550万"],["大(私医)","3,000万"],["大(国医)","350万"],["専門学校","170万"]].map(([s,v])=>(
                 <div key={s} style={{background:C.g100,borderRadius:8,padding:"7px 9px"}}>
                   <div style={{fontSize:9,color:C.t3}}>{s}</div>
                   <div style={{fontSize:10,fontWeight:600,color:C.t1}}>{v}</div>
@@ -1568,8 +1614,8 @@ export default function FireCompass(){
                 </div>
                 <div style={{display:"grid",gridTemplateColumns:isMobile?"1fr 1fr 1fr":"repeat(5,1fr)",gap:5,marginBottom:10}}>
                   {[["幼","kg",[["pub","公"],["pri","私"]]],["小","el",[["pub","公"],["pri","私"]]],
-                    ["中","jh",[["pub","公"],["pri","私"]]],["高","hs",[["pub","公"],["pri","私"]]],
-                    ["大","univ",[["pub","国"],["pri","私文"],["sci","私理"],["med","医"]]]
+                    ["中","jh",[["pub","公"],["pri","私"]]],["高","hs",[["pub","公"],["pri","私"],["none","なし"]]],
+                    ["大","univ",[["pub","国立"],["med_nat","国立医"],["pri","私文"],["sci","私理"],["pharm","私薬"],["art","私芸"],["med","私医"],["sen","専門"],["none","なし"]]]
                   ].map(([lbl,fld,opts])=>(
                     <div key={fld}>
                       <div style={{fontSize:10,color:C.t3,marginBottom:3,textAlign:"center"}}>{lbl}</div>
